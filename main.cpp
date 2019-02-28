@@ -53,7 +53,7 @@ int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
     auto matrix_name = argv[1];
-    std::cout << matrix_name;
+    std::cout << matrix_name << " ";
 //    int min_possible_color = std::stoi(argv[2]);
 //    int max_possible_color = std::stoi(argv[3]);
 //    matrix_market mm("/home/rostam/b1_ss.mtx");
@@ -62,11 +62,10 @@ int main(int argc, const char *argv[]) {
     matrix<int> m = mm.to_ublas_matrix();
     int min_index = std::stoi(argv[2]);
     int max_index = std::stoi(argv[3]);
-    std::cout << min_index << " " << max_index;
+    std::cout << min_index << " " << max_index << " ";
     int color = 100000;
 
-    std::ofstream out("results_" + std::string(matrix_name) + "_"
-    + std::string(argv[2]) + "_" + std::string(argv[3]) + ".csv");
+    std::ofstream out("results_" + std::string(matrix_name) + "_" + std::string(argv[2]) + "_" + std::string(argv[3]) + ".csv");
     out << "num_edges,cnat,cnew,clfo,csat,mnat,mnew,mlfo,msat" << endl;
 //    omp_set_num_threads(4);
 //#pragma omp parallel for
