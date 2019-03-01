@@ -129,33 +129,10 @@ public:
             //Find first color which can be assigned to v
             auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
             auto res_color = distance(forbiddenColors.begin(),result);
-            if(res_color < max_color) {
-                put_color_v(v, res_color);
-            } else {
-                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
-                int nv = 0;
-                double max_w = -1000;
-                for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
-                    double w = get(boost::edge_weight_t(),g, *ei);
-                    auto source = boost::source ( *ei, g );
-                    auto target = boost::target ( *ei, g );
-                    if(w > max_w) {
-                        max_w = w;
-                        nv = target;
-                    }
-                }
-                put_color_v(v, boost::get(vertex_color, g, nv));
-            }
+            int c = get_suitable_color (res_color, max_color, v);
+            put_color_v(v, c);
         }
-        std::vector<int> colors;
-        std::set<int> unique_colors;
-        for_each_v([&](int v){
-            colors.push_back(get_color_v(v)-1);
-            int the_color = get_color_v(v);
-            if(the_color != -1)
-                unique_colors.insert(the_color);
-        });
-        return {unique_colors.size(), colors};
+        return numOfColor_Colors();
     }
 
     std::tuple<int,std::vector<int>> greedy_color_order(std::vector<int> order, int max_color) {
@@ -170,33 +147,10 @@ public:
             //Find first color which can be assigned to v
             auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
             auto res_color = distance(forbiddenColors.begin(),result);
-            if(res_color < max_color) {
-                put_color_v(v, res_color);
-            } else {
-                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
-                int nv = 0;
-                double max_w = -1000;
-                for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
-                    double w = get(boost::edge_weight_t(),g, *ei);
-                    auto source = boost::source ( *ei, g );
-                    auto target = boost::target ( *ei, g );
-                    if(w > max_w) {
-                        max_w = w;
-                        nv = target;
-                    }
-                }
-                put_color_v(v, boost::get(vertex_color, g, nv));
-            }
+            int c = get_suitable_color (res_color, max_color, v);
+            put_color_v(v, c);
         }
-        std::vector<int> colors;
-        std::set<int> unique_colors;
-        for_each_v([&](int v){
-            colors.push_back(get_color_v(v)-1);
-            int the_color = get_color_v(v);
-            if(the_color != -1)
-                unique_colors.insert(the_color);
-        });
-        return {unique_colors.size(), colors};
+        return numOfColor_Colors();
     }
 
     int num_colors_of_neighbors(int v) {
@@ -281,38 +235,54 @@ public:
             //Find first color which can be assigned to v
             auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != sat_v;});
             auto res_color = distance(forbiddenColors.begin(),result);
-            if(res_color < max_color) {
-                put_color_v(sat_v, res_color);
-            } else {
-                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
-                int nv = 0;
-                double max_w = -1000;
-                for (boost::tie(ei, ei_end) = out_edges(sat_v, g); ei != ei_end; ++ei) {
-                    double w = get(boost::edge_weight_t(),g, *ei);
-                    auto source = boost::source ( *ei, g );
-                    auto target = boost::target ( *ei, g );
-                    if(w > max_w) {
-                        max_w = w;
-                        nv = target;
-                    }
-                }
-                put_color_v(sat_v, boost::get(vertex_color, g, nv));
-            }
-
+            int c = get_suitable_color (res_color, max_color, sat_v);
+            put_color_v(sat_v, c);
             vs.remove(sat_v);
         }
+        return numOfColor_Colors();
+    }
+
+    std::tuple<int,std::vector<int>> numOfColor_Colors() {
         std::vector<int> colors;
         std::set<int> unique_colors;
-        for_each_v([&](int v){
-            colors.push_back(get_color_v(v)-1);
-            int the_color = get_color_v(v);
-            if(the_color != -1)
+        for_each_v([&](int v) {
+            colors.push_back(get_color_v(v));
+            int the_color = get_color_v(v) - 1;
+            if (the_color != -1)
                 unique_colors.insert(the_color);
+            else
+                unique_colors.insert(0);
         });
         return {unique_colors.size(), colors};
     }
 
+    int get_suitable_color (int res_color, int max_color, int v) {
+        if(res_color < max_color) {
+            return res_color;
+        } else {
+            typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
+            int nv = 0;
+            double max_w = -1000;
+            for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
+                double w = get(boost::edge_weight_t(),g, *ei);
+                auto source = boost::source ( *ei, g );
+                auto target = boost::target ( *ei, g );
+                if(w > max_w) {
+                    if(boost::get(vertex_color, g, nv) != -1){
+                        max_w = w;nv = target;
+                    }
+                }
+            }
+            if(boost::get(vertex_color, g, nv) != -1) {
+                return boost::get(vertex_color, g, nv);
+            } else {
+                return 1;
+            }
+        }
+    }
 };
+
+
 
 
 #endif //MY_GCOL_GRAPH_H
