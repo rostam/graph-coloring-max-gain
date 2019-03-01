@@ -15,7 +15,7 @@ compute_misses(int num_colors, const std::vector<int> &color_vec, boost::numeric
 using std::cout;
 using std::endl;
 
-graph matrix2graph(const boost::numeric::ublas::matrix<int> &m, int index) {
+graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int index) {
     graph g(m.size1());
     std::vector<std::tuple<int, int, int>> edges;
     for (int i = 0; i < m.size1(); i++) {
@@ -49,6 +49,33 @@ graph matrix2graph(const boost::numeric::ublas::matrix<int> &m, int index) {
     return g;
 }
 
+graph matrix2graph(const boost::numeric::ublas::matrix<int> &m) {
+    graph g(m.size1());
+    std::vector<std::tuple<int, int, int>> edges;
+    for (int i = 0; i < m.size1(); i++) {
+        for (int j = i + 1; j < m.size1(); j++) {
+            int E_discovered = 0, E_missed = 0;
+            for (int k = 0; k < m.size2(); k++) {
+                if (m(k, i) != 0 && m(k, j) == 0) {
+                    E_discovered++;
+                } else if (m(k, i) == 0 && m(k, j) != 0) {
+                    E_discovered++;
+                } else if (m(k, i) != 0 && m(k, j) != 0) {
+                    E_missed += 2;
+                }
+            }
+            int weight = E_discovered - E_missed;
+            if (E_missed != 0) edges.push_back({i, j, weight});
+        }
+    }
+
+    for (int i = 0; i < edges.size(); i++) {
+        auto[v1, v2, w] = edges[i];
+        g.add_edge(v1, v2, w);
+    }
+    return g;
+}
+
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
@@ -62,16 +89,23 @@ int main(int argc, const char *argv[]) {
     matrix<int> m = mm.to_ublas_matrix();
     int min_index = std::stoi(argv[2]);
     int max_index = std::stoi(argv[3]);
-    std::cout << min_index << " " << max_index << " ";
+    std::cout << min_index << " " << max_index << std::endl;
     int color = 100000;
 
     std::ofstream out("results_" + std::string(matrix_name) + "_" + std::string(argv[2]) + "_" + std::string(argv[3]) + ".csv");
     out << "num_edges,cnat,cnew,clfo,csat,mnat,mnew,mlfo,msat" << endl;
 //    omp_set_num_threads(4);
 //#pragma omp parallel for
-    for (int index = min_index; index <= max_index; index+=1) {
-        cout << index << endl;
-        graph g = matrix2graph(m, index);
+    graph g = matrix2graph(m);
+//    auto [num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
+//    cout << "num of colors of full coloring: " << num_colors_natural_full << endl;
+//    if(num_colors_natural_full <= 10) return 10;
+     int num_colors_natural_full = 18;
+    for (int index = num_colors_natural_full-10; index <= num_colors_natural_full; index+=1) {
+        std::cerr << index << endl;
+        color = index;
+//        graph g = matrix2graph_limited(m, index);
+
 //        typedef property_map<Graph, boost::vertex_index_t>::const_type vertex_index_map;
 //        boost::iterator_property_map<int *, vertex_index_map> color(&color_vec.front(), boost::get(boost::vertex_index, g));
 //        int num_colors = boost::sequential_vertex_coloring(g, color);
@@ -79,16 +113,15 @@ int main(int argc, const char *argv[]) {
 //        out << "threshold_for_edge_weights " << index << endl;
 //        for (int color = min_possible_color; color < max_possible_color; color++) {
         auto [num_colors_natural, color_vec_natural] = g.greedy_color(color);
+        std::cerr << "here 1";
         int all_misses_natural = compute_misses(num_colors_natural, color_vec_natural, m);
-
+        std::cerr << "here 2";
         std::vector<int> ord = g.optimum_order();
-        auto[num_colors_newIdea, color_vec_newIdea] = g.greedy_color_order(ord, color);
+        auto[num_colors_newIdea, color_vec_newIdea] = g.greedy_color_limited(ord, color);
         int all_misses_newIdea = compute_misses(num_colors_newIdea, color_vec_newIdea, m);
-
         std::vector<int> lfo_ord = g.largest_first_order();
-        auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_order(lfo_ord, color);
+        auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_limited(lfo_ord, color);
         int all_misses_lfo = compute_misses(num_colors_lfo, color_vec_lfo, m);
-
         auto[num_colors_sat, color_vec_sat] = g.saturation_degree_ordering_coloring(color);
         int all_misses_sat = compute_misses(num_colors_sat, color_vec_sat, m);
 
@@ -107,14 +140,16 @@ int main(int argc, const char *argv[]) {
 
 int compute_misses(int num_colors, const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m) {
     int all_sum = 0;
+    std::cerr << "num _ colors " << num_colors << "   "  << color_vec.size() <<  endl;
     std::vector<boost::numeric::ublas::vector<int>> misses(num_colors);
     for (int i = 0; i < num_colors; i++) {
         misses[i] = boost::numeric::ublas::zero_vector<int>(m.size2());
     }
+    std::cerr << "Adsfdsafa";
     for (int i = 0; i < color_vec.size(); i++) {
         misses[color_vec[i]] += column(m, i);
     }
-
+    std::cerr << "Adsfdsafa2";
     for (int i = 0; i < misses.size(); i++) {
         for (int j = 0; j < misses[i].size(); j++) {
             if (misses[i][j] > 1) all_sum+=misses[i][j];
@@ -122,6 +157,6 @@ int compute_misses(int num_colors, const std::vector<int> &color_vec, boost::num
 //        all_sum += sum(misses[i]);
         }
     }
-
+    std::cerr << "Adsfdsafa3";
     return all_sum;
 }

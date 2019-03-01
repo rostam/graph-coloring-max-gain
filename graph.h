@@ -117,7 +117,7 @@ public:
         for (int i : tmp) func(i);
     }
 
-    std::tuple<int,std::vector<int>> greedy_color_order(std::vector<int> order, int max_color) {
+    std::tuple<int,std::vector<int>> greedy_color_limited(std::vector<int> order, int max_color) {
         init_colors();
         std::vector<unsigned int> forbiddenColors(num_v(), -1);
         for(int v : order) {
@@ -129,8 +129,64 @@ public:
             //Find first color which can be assigned to v
             auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
             auto res_color = distance(forbiddenColors.begin(),result);
-            if(res_color < max_color)
+            if(res_color < max_color) {
                 put_color_v(v, res_color);
+            } else {
+                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
+                int nv = 0;
+                double max_w = -1000;
+                for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
+                    double w = get(boost::edge_weight_t(),g, *ei);
+                    auto source = boost::source ( *ei, g );
+                    auto target = boost::target ( *ei, g );
+                    if(w > max_w) {
+                        max_w = w;
+                        nv = target;
+                    }
+                }
+                put_color_v(v, boost::get(vertex_color, g, nv));
+            }
+        }
+        std::vector<int> colors;
+        std::set<int> unique_colors;
+        for_each_v([&](int v){
+            colors.push_back(get_color_v(v)-1);
+            int the_color = get_color_v(v);
+            if(the_color != -1)
+                unique_colors.insert(the_color);
+        });
+        return {unique_colors.size(), colors};
+    }
+
+    std::tuple<int,std::vector<int>> greedy_color_order(std::vector<int> order, int max_color) {
+        init_colors();
+        std::vector<unsigned int> forbiddenColors(num_v(), -1);
+        for(int v : order) {
+            forbiddenColors[0] = v;
+            for_each_n(v, [&](int n) {
+                int c = get_color_v(n);
+                if (c > 0) forbiddenColors[c] = v;
+            });
+            //Find first color which can be assigned to v
+            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
+            auto res_color = distance(forbiddenColors.begin(),result);
+            if(res_color < max_color) {
+                put_color_v(v, res_color);
+            } else {
+                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
+                int nv = 0;
+                double max_w = -1000;
+                for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
+                    double w = get(boost::edge_weight_t(),g, *ei);
+                    auto source = boost::source ( *ei, g );
+                    auto target = boost::target ( *ei, g );
+                    if(w > max_w) {
+                        max_w = w;
+                        nv = target;
+                    }
+                }
+                put_color_v(v, boost::get(vertex_color, g, nv));
+            }
         }
         std::vector<int> colors;
         std::set<int> unique_colors;
@@ -225,8 +281,23 @@ public:
             //Find first color which can be assigned to v
             auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != sat_v;});
             auto res_color = distance(forbiddenColors.begin(),result);
-            if(res_color < max_color)
+            if(res_color < max_color) {
                 put_color_v(sat_v, res_color);
+            } else {
+                typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
+                int nv = 0;
+                double max_w = -1000;
+                for (boost::tie(ei, ei_end) = out_edges(sat_v, g); ei != ei_end; ++ei) {
+                    double w = get(boost::edge_weight_t(),g, *ei);
+                    auto source = boost::source ( *ei, g );
+                    auto target = boost::target ( *ei, g );
+                    if(w > max_w) {
+                        max_w = w;
+                        nv = target;
+                    }
+                }
+                put_color_v(sat_v, boost::get(vertex_color, g, nv));
+            }
 
             vs.remove(sat_v);
         }
