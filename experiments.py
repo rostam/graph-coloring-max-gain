@@ -2,7 +2,7 @@ import pandas as pd, matplotlib.pyplot as plt, numpy as np
 plt.rcParams.update({'font.size': 16})
 
 # nnz = 8402
-# data_nos3 = pd.read_csv('results_nos3.mtx_8_18.csv')
+# data_nos3 = pd.read_csv('nos3.mtx.csv')
 # data_nos3['mnat'] = 8402 - (data_nos3['mnat']/2)
 # data_nos3['mnew'] = 8402 - (data_nos3['mnew']/2)
 # data_nos3['mlfo'] = 8402 - (data_nos3['mlfo']/2)

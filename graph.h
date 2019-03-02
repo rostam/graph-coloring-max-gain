@@ -132,7 +132,7 @@ public:
             int c = get_suitable_color (res_color, max_color, v);
             put_color_v(v, c);
         }
-        return numOfColor_Colors();
+        return tuple_numOfColor_Colors();
     }
 
     std::tuple<int,std::vector<int>> greedy_color_order(std::vector<int> order, int max_color) {
@@ -150,7 +150,7 @@ public:
             int c = get_suitable_color (res_color, max_color, v);
             put_color_v(v, c);
         }
-        return numOfColor_Colors();
+        return tuple_numOfColor_Colors();
     }
 
     int num_colors_of_neighbors(int v) {
@@ -175,15 +175,18 @@ public:
         std::vector<std::tuple<int,int>> vertex_weight;
         for_each_v([&](int v){
             int sum = 0;
+            int max = -1000;
             for_each_n(v, [&](int n) {
                 int w = get(boost::edge_weight_t(),g, edge(v,n,g).first);
-                sum+= w;
+                if(w > max)
+                    max = w;
+                sum += w;
             });
-            vertex_weight.push_back({v,sum});
+            vertex_weight.push_back({v,max});
         });
 
         std::sort(begin(vertex_weight), end(vertex_weight), [](auto const &t1, auto const &t2) {
-            return get<1>(t1) > get<1>(t2); // or use a custom compare function
+            return get<1>(t1) > get<1>(t2);
         });
 
         std::vector<int> ret;
@@ -239,10 +242,10 @@ public:
             put_color_v(sat_v, c);
             vs.remove(sat_v);
         }
-        return numOfColor_Colors();
+        return tuple_numOfColor_Colors();
     }
 
-    std::tuple<int,std::vector<int>> numOfColor_Colors() {
+    std::tuple<int,std::vector<int>> tuple_numOfColor_Colors() {
         std::vector<int> colors;
         std::set<int> unique_colors;
         for_each_v([&](int v) {

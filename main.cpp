@@ -76,11 +76,25 @@ graph matrix2graph(const boost::numeric::ublas::matrix<int> &m) {
     return g;
 }
 
+std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
+    if(num_colors_natural_full > 220) {
+        return {num_colors_natural_full - 200, num_colors_natural_full, 20};
+    } else if(num_colors_natural_full > 120) {
+        return {num_colors_natural_full - 100, num_colors_natural_full, 10};
+    } else if (num_colors_natural_full > 35) {
+        return {num_colors_natural_full - 30, num_colors_natural_full, 3};
+    } else if (num_colors_natural_full > 25) {
+        return {num_colors_natural_full - 20, num_colors_natural_full, 2};
+    } else {
+        return {num_colors_natural_full - 10, num_colors_natural_full, 1};
+    }
+}
+
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
 //    auto matrix_arr = {"nos3.mtx", "plbuckle.mtx", "bcsstk08.mtx", "1138_bus.mtx", "G51.mtx", "bcsstm13.mtx"};
-    auto matrix_arr = {"nos3.mtx"};
+    auto matrix_arr = {"gemat11.mtx"};
     for(auto matrix_name : matrix_arr) {
         std::cout << matrix_name << " " << std::endl;
         matrix_market mm(matrix_name);
@@ -91,24 +105,22 @@ int main(int argc, const char *argv[]) {
         auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
         cout << "num of colors of full coloring: " << num_colors_natural_full << endl;
         if (num_colors_natural_full <= 10) return 10;
-        int from = num_colors_natural_full - 10;
-        int to = num_colors_natural_full;
-        std::ofstream out("results_" + std::string(matrix_name) + "_" + std::to_string(from) + "_" + std::to_string(to) + ".csv");
+        auto [from, to, step] = get_bounds(num_colors_natural_full);
+        std::cout << from << " " << to << " " << step << std::endl;
+        std::ofstream out(std::string(matrix_name) + ".csv");
         out << "numOfColor,mnat,mnew,mlfo,msat" << endl;
-        for (int color = from; color <= to; color += 1) {
+        for (int color = from; color <= to; color += step) {
             std::cerr << color << endl;
-
             auto[num_colors_natural, color_vec_natural] = g.greedy_color(color);
             int all_misses_natural = compute_misses(num_colors_natural, color_vec_natural, m);
-            std::vector<int> ord = g.optimum_order();
 
+            std::vector<int> ord = g.optimum_order();
             auto[num_colors_newIdea, color_vec_newIdea] = g.greedy_color_limited(ord, color);
             int all_misses_newIdea = compute_misses(num_colors_newIdea, color_vec_newIdea, m);
-            std::vector<int> lfo_ord = g.largest_first_order();
 
+            std::vector<int> lfo_ord = g.largest_first_order();
             auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_limited(lfo_ord, color);
             int all_misses_lfo = compute_misses(num_colors_lfo, color_vec_lfo, m);
-
 
             auto[num_colors_sat, color_vec_sat] = g.saturation_degree_ordering_coloring(color);
             int all_misses_sat = compute_misses(num_colors_sat, color_vec_sat, m);
@@ -133,7 +145,6 @@ int compute_misses(int num_colors, const std::vector<int> &color_vec, boost::num
     }
     for (int i = 0; i < color_vec.size(); i++) {
         if(color_vec[i] >= misses.size()) continue;
-        std::cerr << column(m, i) << std::endl;
         misses[color_vec[i]] += column(m, i);
     }
 //    std::cerr << misses << std::endl;
@@ -146,6 +157,5 @@ int compute_misses(int num_colors, const std::vector<int> &color_vec, boost::num
 //        all_sum += sum(misses[i]);
         }
     }
-    std::cerr << all_sum << " " << std::endl << std::endl ;
     return all_sum;
 }
