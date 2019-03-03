@@ -145,6 +145,7 @@ int compute_misses(int num_colors, const std::vector<int> &color_vec, boost::num
     }
     for (int i = 0; i < color_vec.size(); i++) {
         if(color_vec[i] >= misses.size()) continue;
+        if(color_vec[i] > num_colors)
         misses[color_vec[i]] += column(m, i);
     }
 //    std::cerr << misses << std::endl;

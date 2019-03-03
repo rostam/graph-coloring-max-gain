@@ -182,7 +182,7 @@ public:
                     max = w;
                 sum += w;
             });
-            vertex_weight.push_back({v,max});
+            vertex_weight.push_back({v,sum});
         });
 
         std::sort(begin(vertex_weight), end(vertex_weight), [](auto const &t1, auto const &t2) {

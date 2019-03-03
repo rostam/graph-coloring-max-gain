@@ -25,7 +25,7 @@ def vis(mat_name):
     plt.show()
 
 
-mat_name = 'nos3.mtx'
+mat_name = 'G51.mtx'
 vis(mat_name)
 
 
