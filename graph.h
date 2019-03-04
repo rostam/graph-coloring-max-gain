@@ -53,6 +53,8 @@ public:
 
     unsigned long num_v() { return boost::num_vertices(g); }
 
+    unsigned long num_e() { return boost::num_edges(g);}
+
     int get_color_v(int v) { return boost::get(vertex_color, g, v); }
 
     void put_color_v(int v, int c) { put(color, v, c); }

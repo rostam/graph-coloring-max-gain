@@ -16,7 +16,7 @@ using std::cout;
 using std::endl;
 
 // k is the number of edges that we want to remove
-graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int k) {
+graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int kk) {
     graph g(m.size1());
     std::vector<std::tuple<int, int, int>> edges;
     for (int i = 0; i < m.size1(); i++) {
@@ -35,14 +35,12 @@ graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int k) {
             if (E_missed != 0) edges.push_back({i, j, weight});
         }
     }
-    sort(begin(edges), end(edges), [&](std::tuple<int, int, int> t1, std::tuple<int, int, int> t2) {
-        return get<2>(t1) > get<2>(t2);
-    });
-
-    for (int i = k; i < edges.size(); i++) {
+    sort(begin(edges), end(edges), [&](std::tuple<int, int, int> t1, std::tuple<int, int, int> t2) {return get<2>(t1) > get<2>(t2);});
+    for (int i = kk; i < edges.size(); i++) {
         auto[v1, v2, w] = edges[i];
         g.add_edge(v1, v2, w);
     }
+    std::cerr << "num of edges: " << g.num_e() << std::endl;
     return g;
 }
 
@@ -64,11 +62,12 @@ int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
 //    auto matrix_arr = {"nos3.mtx", "plbuckle.mtx", "bcsstk08.mtx", "1138_bus.mtx", "G51.mtx", "bcsstm13.mtx", "gemat11.mtx"};
-    auto matrix_arr = {"G51.mtx"};
-    int sample = 75;
+    auto matrix_arr = {"mats/G51.mtx"};
+    int sample = 30;
     std::ofstream out2(std::string("G51.mtx") + "k.csv");
     out2 << "k,mnat,mnew,mlfo,msat" << endl;
-    for (int k = 0; k < 10; k+=100) {
+    for (int k = 0; k < 1; k+=1) {
+        std::cerr << "k=" << k << std::endl;
         for (auto matrix_name : matrix_arr) {
             std::cout << matrix_name << " " << std::endl;
             matrix_market mm(matrix_name);
@@ -87,7 +86,7 @@ int main(int argc, const char *argv[]) {
             std::vector<int> lfo_ord = g.largest_first_order();
             auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_limited(lfo_ord, 100000);
             auto[num_colors_sat, color_vec_sat] = g.saturation_degree_ordering_coloring(100000);
-            for (int color = 75; color <= to; color += step) {
+            for (int color = from; color <= to; color += step) {
                 std::cerr << color << endl;
                 int all_misses_natural = compute_misses(num_colors_natural, color_vec_natural, m, color);
                 int all_misses_newIdea = compute_misses(num_colors_newIdea, color_vec_newIdea, m, color);
