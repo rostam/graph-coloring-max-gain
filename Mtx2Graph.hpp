@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <map>
 #endif
 
 /** 
@@ -20,6 +21,7 @@ struct matrix_market
 {
   matrix_market(const char* filename);
   boost::numeric::ublas::matrix<int> to_ublas_matrix();
+  std::map<int,std::vector<int>> to_mymat();
   ~matrix_market();
   bool write_to_file(char* filename);
 

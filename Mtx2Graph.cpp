@@ -95,6 +95,31 @@ boost::numeric::ublas::matrix<int> matrix_market::to_ublas_matrix() {
     return m;
 }
 
+/**
+ * \brief return the bipartite graph generated from the matrix
+ *
+ * @param G_b the result matrix
+ * @return
+ */
+std::map<int,std::vector<int>> matrix_market::to_mymat() {
+    std::map<int,std::vector<int>> mymat;
+    for (int i=0;i < std::max(M,N);i++) {
+        mymat[i] = std::vector<int>();
+    }
+    if (mm_is_symmetric(matcode)) {
+        for (int i = 0; i < nz; ++i) {
+            mymat[I[i]].push_back(J[i]);
+            mymat[J[i]].push_back(I[i]);
+        }
+    } else {
+        for (int i = 0; i < nz; ++i) {
+            mymat[I[i]].push_back(J[i]);
+        }
+    }
+
+    return mymat;
+}
+
 matrix_market::~matrix_market() {
   free(I);
   free(J);

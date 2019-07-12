@@ -86,6 +86,16 @@ public:
         std::for_each(ei, ei_end, func);
     }
 
+    E_iter first_edge() {
+        E_iter ei, ei_end;
+        tie(ei, ei_end) = edges(g);
+        return ei;
+    }
+
+    void remove_e(E_iter e) {
+        boost::remove_edge(boost::source(*e,g), boost::target(*e,g),g);
+    }
+
     /**
      * for each neighbor of v
      * @tparam Lambda

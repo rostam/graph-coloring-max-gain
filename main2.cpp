@@ -71,7 +71,7 @@ int main(int argc, const char *argv[]) {
         for (auto matrix_name : matrix_arr) {
             std::cout << matrix_name << " " << std::endl;
             matrix_market mm(matrix_name);
-            matrix<int> m = mm.to_ublas_matrix();
+            matrix<int> m = matrix<int> m = mm.to_ublas_matrix();;
             graph g = matrix2graph_limited(m, k);
             auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
             cout << "num of colors of full coloring: " << num_colors_natural_full << endl;
