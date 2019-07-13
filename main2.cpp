@@ -10,8 +10,7 @@
 #include <omp.h>
 #include <chrono>
 
-int compute_misses    (const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color);
-int compute_discovered(const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color);
+std::tuple<int, int, int, int> compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color);
 
 using std::cout;
 using std::cerr;
@@ -63,7 +62,7 @@ std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
-//    auto matrix_arr = {"nos3.mtx", "plbuckle.mtx", "bcsstk08.mtx", "1138_bus.mtx", "G51.mtx", "bcsstm13.mtx", "gemat11.mtx"};
+//    auto matrix_arr = {"nos3.mtx", "plbuckle.mtx", "bcsstk08.mtx", "bcsstk08", "1138_bus.mtx", "G51.mtx", "bcsstm13.mtx", "gemat11.mtx"};
     auto matrix_arr = {"mats/bcsstk08.mtx"};
     int sample = 30;
     std::ofstream out2(std::string("mats/res/bcsstk08_") + "k.csv");
@@ -71,7 +70,7 @@ int main(int argc, const char *argv[]) {
 
     auto start = std::chrono::steady_clock::now();
 #pragma omp parallel for
-    for (int k = 0; k < 20; k+=1) {
+    for (int k = 0; k < 15; k+=1) {
 //        std::cout << "k = " << k << std::endl;
         for (auto matrix_name : matrix_arr) {
 //            std::cout << matrix_name << " " << std::endl;
@@ -92,15 +91,19 @@ int main(int argc, const char *argv[]) {
             auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_limited(lfo_ord, 100000);
             auto[num_colors_sat, color_vec_sat] = g.saturation_degree_ordering_coloring(100000);
             for (int color = from; color <= to; color += step) {
-                int all_misses_natural = compute_discovered(color_vec_natural, m, color);
-                int all_misses_newIdea = compute_discovered(color_vec_newIdea, m, color);
-                int all_misses_lfo = compute_discovered(color_vec_lfo, m, color);
-                int all_misses_sat = compute_discovered(color_vec_sat, m, color);
-                out << color << "," << all_misses_natural << "," << all_misses_newIdea << ","
-                    << all_misses_lfo << "," << all_misses_sat << endl;
+                auto[all_sum_nat, all_discovered_color_zero_sum_nat, all_misses_nat, all_misses_color_zero_sum_nat] = compute_discovered_misses(color_vec_natural, m, color);
+                auto[all_sum_new, all_discovered_color_zero_sum_new, all_misses_new, all_misses_color_zero_sum_new] = compute_discovered_misses(color_vec_newIdea, m, color);
+                auto[all_sum_lfo, all_discovered_color_zero_sum_lfo, all_misses_lfo, all_misses_color_zero_sum_lfo] = compute_discovered_misses(color_vec_lfo, m, color);
+                auto[all_sum_sat, all_discovered_color_zero_sum_sat, all_misses_sat, all_misses_color_zero_sum_sat] = compute_discovered_misses(color_vec_sat, m, color);
+                int all_discovered_natural = all_sum_nat + all_discovered_color_zero_sum_nat;//compute_discovered(color_vec_natural, m, color);
+                int all_discovered_newIdea = all_sum_new + all_discovered_color_zero_sum_new;//compute_discovered(color_vec_newIdea, m, color);
+                int all_discovered_lfo = all_sum_lfo + all_discovered_color_zero_sum_lfo;//compute_discovered(color_vec_lfo, m, color);
+                int all_discovered_sat = all_sum_sat + all_discovered_color_zero_sum_sat;//compute_discovered(color_vec_sat, m, color);
+                out << color << "," << all_discovered_natural << "," << all_discovered_newIdea << ","
+                    << all_discovered_lfo << "," << all_discovered_sat << endl;
 //                if(color == sample) {
-                    out2 << k << "," << all_misses_natural << "," << all_misses_newIdea << ","
-                         << all_misses_lfo << "," << all_misses_sat << endl;
+                    out2 << k << "," << all_discovered_natural << "," << all_discovered_newIdea << ","
+                         << all_discovered_lfo << "," << all_discovered_sat << endl;
 //                    break;
 //                }
             }
@@ -117,45 +120,10 @@ int main(int argc, const char *argv[]) {
     return 0;
 }
 
-int compute_misses(const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color) {
-    std::vector<boost::numeric::ublas::vector<int>> misses(color);
-    boost::numeric::ublas::vector<int> zero_color_misses = boost::numeric::ublas::zero_vector<int>(m.size2());
-    for (int i = 0; i < color; i++) {
-        misses[i] = boost::numeric::ublas::zero_vector<int>(m.size2());
-    }
-    int cnt = 0;
-    for (int i = 0; i < color_vec.size(); i++) {
-        if (color_vec[i] < color) {
-            misses[color_vec[i]] += column(m, i);
-        } else {
-            cnt++;
-            zero_color_misses += column(m, i);
-        }
-    }
-//    std::cerr << "The number of vertices with color zero: " << cnt << std::endl;
-    int all_sum = 0;
-    for (auto &misse : misses) {
-        for (int j : misse) {
-            if (j != 1)
-                all_sum += j;
-        }
-    }
-
-    int all_misses_color_zero_sum = 0;
-    for (auto &zero_color_miss : zero_color_misses) {
-        if (zero_color_miss != 1) {
-            all_misses_color_zero_sum += zero_color_miss;
-        }
-    }
-
-    all_sum += all_misses_color_zero_sum;
-    return all_sum;
-}
-
-int compute_discovered(const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color) {
+std::tuple<int, int, int, int> compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ublas::matrix<int> &m, int color) {
     auto start = std::chrono::steady_clock::now();
     std::vector<boost::numeric::ublas::vector<int>> discovered(color);
-    boost::numeric::ublas::vector<int> zero_color_discovered = boost::numeric::ublas::zero_vector<int>(m.size2());
+    boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size2());
     for (int i = 0; i < color; i++) {
         discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size2());
     }
@@ -165,25 +133,32 @@ int compute_discovered(const std::vector<int> &color_vec, boost::numeric::ublas:
             discovered[color_vec[i]] += column(m, i);
         } else {
             cnt++;
-            zero_color_discovered += column(m, i);
+            zeros += column(m, i);
         }
     }
 //    std::cerr << "The number of vertices with color zero: " << cnt << std::endl;
     int all_sum = 0;
+    int all_misses = 0;
     for (auto &misse : discovered) {
         for (int j : misse) {
             if (j == 1)
                 all_sum += 1;
+            else
+                all_misses += j;
         }
     }
 
+    int all_discovered_color_zero_sum = 0;
     int all_misses_color_zero_sum = 0;
-    for (auto &zero_color_miss : zero_color_discovered)
+    for (auto &zero_color_miss : zeros)
         if (zero_color_miss == 1)
-            all_misses_color_zero_sum += 1;
+            all_discovered_color_zero_sum += 1;
+        else
+            all_misses_color_zero_sum += zero_color_miss;
+
     auto end = std::chrono::steady_clock::now();
 //    cerr << "Elapsed time in milliseconds : "
 //         << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
 //         << " ms" << endl;
-    return all_sum;
+    return {all_sum, all_discovered_color_zero_sum, all_misses,all_misses_color_zero_sum};
 }
