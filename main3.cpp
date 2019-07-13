@@ -18,7 +18,7 @@ int compute_misses(int num_colors, const std::vector<int> &color_vec, const grap
 
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
-    matrix_market mm("mats/memplus.mtx");
+    matrix_market mm("mats/bcsstk08.mtx");
     std::map<int, std::vector<int>> my = mm.to_mymat();
     graph g;
     for (const auto &p : my) {
@@ -40,8 +40,7 @@ int main(int argc, const char *argv[]) {
         auto[num_colors_lfo, color_vec_lfo] = g.greedy_color_limited(lfo_ord, 100000);
         auto[num_colors_sat, color_vec_sat] = g.saturation_degree_ordering_coloring(100000);
         for (int color = 0; color <= 10; color += 1) {
-            std::cerr << color << endl;
-
+            std::cout << color << endl;
             int all_misses_natural = compute_misses(num_colors_natural, color_vec_natural, g, color);
             int all_misses_newIdea = compute_misses(num_colors_newIdea, color_vec_newIdea, g, color);
             int all_misses_lfo = compute_misses(num_colors_lfo, color_vec_lfo, g, color);

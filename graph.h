@@ -40,9 +40,9 @@ class graph {
     Graph g;
     property_map<Graph, vertex_color_t>::type color;
 public:
-    graph(unsigned long num_vertices) : g(Graph(num_vertices)) { }
+    graph(unsigned long num_vertices) : g(Graph(num_vertices)) {}
 
-    graph() { }
+    graph()=default;
 
     void add_edge(int i, int j, int weight) { boost::add_edge(i, j, weight, g); }
 
@@ -53,7 +53,7 @@ public:
 
     unsigned long num_v() { return boost::num_vertices(g); }
 
-    unsigned long num_e() { return boost::num_edges(g);}
+    unsigned long num_e() { return boost::num_edges(g); }
 
     int get_color_v(int v) { return boost::get(vertex_color, g, v); }
 
@@ -93,7 +93,7 @@ public:
     }
 
     void remove_e(E_iter e) {
-        boost::remove_edge(boost::source(*e,g), boost::target(*e,g),g);
+        boost::remove_edge(boost::source(*e, g), boost::target(*e, g), g);
     }
 
     /**
@@ -129,37 +129,37 @@ public:
         for (int i : tmp) func(i);
     }
 
-    std::tuple<int,std::vector<int>> greedy_color_limited(std::vector<int> order, int max_color) {
+    std::tuple<int, std::vector<int>> greedy_color_limited(const std::vector<int>& order, int max_color) {
         init_colors();
         std::vector<unsigned int> forbiddenColors(num_v(), -1);
-        for(int v : order) {
+        for (int v : order) {
             forbiddenColors[0] = v;
             for_each_n(v, [&](int n) {
                 int c = get_color_v(n);
                 if (c > 0)forbiddenColors[c] = v;
             });
             //Find first color which can be assigned to v
-            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
-            auto res_color = distance(forbiddenColors.begin(),result);
-            int c = get_suitable_color (res_color, max_color, v);
+            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) { return i != v; });
+            auto res_color = distance(forbiddenColors.begin(), result);
+            int c = get_suitable_color(res_color, max_color, v);
             put_color_v(v, c);
         }
         return tuple_numOfColor_Colors();
     }
 
-    std::tuple<int,std::vector<int>> greedy_color_order(std::vector<int> order, int max_color) {
+    std::tuple<int, std::vector<int>> greedy_color_order(const std::vector<int>& order, int max_color) {
         init_colors();
         std::vector<unsigned int> forbiddenColors(num_v(), -1);
-        for(int v : order) {
+        for (int v : order) {
             forbiddenColors[0] = v;
             for_each_n(v, [&](int n) {
                 int c = get_color_v(n);
                 if (c > 0) forbiddenColors[c] = v;
             });
             //Find first color which can be assigned to v
-            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != v;});
-            auto res_color = distance(forbiddenColors.begin(),result);
-            int c = get_suitable_color (res_color, max_color, v);
+            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) { return i != v; });
+            auto res_color = distance(forbiddenColors.begin(), result);
+            int c = get_suitable_color(res_color, max_color, v);
             put_color_v(v, c);
         }
         return tuple_numOfColor_Colors();
@@ -167,14 +167,14 @@ public:
 
     int num_colors_of_neighbors(int v) {
         std::set<int> unique_colors;
-        for_each_n(v, [&](int n){
-           int c = get_color_v(n);
-           unique_colors.insert(c);
+        for_each_n(v, [&](int n) {
+            int c = get_color_v(n);
+            unique_colors.insert(c);
         });
         return unique_colors.size();
     }
 
-    std::tuple<int,std::vector<int>> greedy_color(int max_color) {
+    std::tuple<int, std::vector<int>> greedy_color(int max_color) {
         init_colors();
         std::vector<int> order(num_v(), 0);
         for_each_v([&](int v) {
@@ -184,17 +184,17 @@ public:
     }
 
     std::vector<int> optimum_order() {
-        std::vector<std::tuple<int,int>> vertex_weight;
-        for_each_v([&](int v){
+        std::vector<std::tuple<int, int>> vertex_weight;
+        for_each_v([&](int v) {
             int sum = 0;
             int max = -1000;
             for_each_n(v, [&](int n) {
-                int w = get(boost::edge_weight_t(),g, edge(v,n,g).first);
-                if(w > max)
+                int w = get(boost::edge_weight_t(), g, edge(v, n, g).first);
+                if (w > max)
                     max = w;
                 sum += w;
             });
-            vertex_weight.push_back({v,sum});
+            vertex_weight.emplace_back(v, sum);
         });
 
         std::sort(begin(vertex_weight), end(vertex_weight), [](auto const &t1, auto const &t2) {
@@ -202,15 +202,15 @@ public:
         });
 
         std::vector<int> ret;
-        for(auto &t : vertex_weight)
+        for (auto &t : vertex_weight)
             ret.push_back(get<0>(t));
         return ret;
     }
 
     std::vector<int> largest_first_order() {
-        std::vector<std::tuple<int,int>> vertex_weight;
-        for_each_v([&](int v){
-            vertex_weight.push_back({v,degree(v,g)});
+        std::vector<std::tuple<int, int>> vertex_weight;
+        for_each_v([&](int v) {
+            vertex_weight.emplace_back(v, degree(v, g));
         });
 
         std::sort(begin(vertex_weight), end(vertex_weight), [](auto const &t1, auto const &t2) {
@@ -218,28 +218,29 @@ public:
         });
 
         std::vector<int> ret;
-        for(std::tuple<int,int> t : vertex_weight)
+        for (std::tuple<int, int> t : vertex_weight)
             ret.push_back(get<0>(t));
         return ret;
     }
 
-    std::tuple<int,std::vector<int>> saturation_degree_ordering_coloring(int max_color) {
+    std::tuple<int, std::vector<int>> saturation_degree_ordering_coloring(int max_color) {
         init_colors();
         V_iter vi, vi_end;
         std::tie(vi, vi_end) = vertices(g);
-        std::list<int> vs (vi, vi_end);
+        std::list<int> vs(vi, vi_end);
         std::vector<unsigned int> forbiddenColors(num_v(), -1);
-        while(!vs.empty()) {
+        while (!vs.empty()) {
             int sat_v;
             std::vector<std::tuple<int, int>> vertex_num_color_neighbors;
-            for(int v : vs) {
-                vertex_num_color_neighbors.push_back({v, num_colors_of_neighbors(v)});
+            for (int v : vs) {
+                vertex_num_color_neighbors.emplace_back(v, num_colors_of_neighbors(v));
             }
 
             std::tuple<int, int> vc =
-                    *std::max_element(std::begin(vertex_num_color_neighbors), std::end(vertex_num_color_neighbors), [&](std::tuple<int, int> vc1, std::tuple<int, int> vc2){
-                        return get<1>(vc1) < get<1>(vc2);
-                    });
+                    *std::max_element(std::begin(vertex_num_color_neighbors), std::end(vertex_num_color_neighbors),
+                                      [&](std::tuple<int, int> vc1, std::tuple<int, int> vc2) {
+                                          return get<1>(vc1) < get<1>(vc2);
+                                      });
             sat_v = std::get<0>(vc);
 
             forbiddenColors[0] = sat_v;
@@ -248,16 +249,16 @@ public:
                 if (c > 0)forbiddenColors[c] = sat_v;
             });
             //Find first color which can be assigned to v
-            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) {return i != sat_v;});
-            auto res_color = distance(forbiddenColors.begin(),result);
-            int c = get_suitable_color (res_color, max_color, sat_v);
+            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) { return i != sat_v; });
+            auto res_color = distance(forbiddenColors.begin(), result);
+            int c = get_suitable_color(res_color, max_color, sat_v);
             put_color_v(sat_v, c);
             vs.remove(sat_v);
         }
         return tuple_numOfColor_Colors();
     }
 
-    std::tuple<int,std::vector<int>> tuple_numOfColor_Colors() {
+    std::tuple<int, std::vector<int>> tuple_numOfColor_Colors() {
         std::vector<int> colors;
         std::set<int> unique_colors;
         for_each_v([&](int v) {
@@ -271,24 +272,25 @@ public:
         return {unique_colors.size(), colors};
     }
 
-    int get_suitable_color (int res_color, int max_color, int v) {
-        if(res_color < max_color) {
+    int get_suitable_color(int res_color, int max_color, int v) {
+        if (res_color < max_color) {
             return res_color;
         } else {
-            typename graph_traits < Graph >::out_edge_iterator ei, ei_end;
+            typename graph_traits<Graph>::out_edge_iterator ei, ei_end;
             int nv = 0;
             double max_w = -1000;
             for (boost::tie(ei, ei_end) = out_edges(v, g); ei != ei_end; ++ei) {
-                double w = get(boost::edge_weight_t(),g, *ei);
-                auto source = boost::source ( *ei, g );
-                auto target = boost::target ( *ei, g );
-                if(w > max_w) {
-                    if(boost::get(vertex_color, g, nv) != -1){
-                        max_w = w;nv = target;
+                double w = get(boost::edge_weight_t(), g, *ei);
+                auto source = boost::source(*ei, g);
+                auto target = boost::target(*ei, g);
+                if (w > max_w) {
+                    if (boost::get(vertex_color, g, nv) != -1) {
+                        max_w = w;
+                        nv = target;
                     }
                 }
             }
-            if(boost::get(vertex_color, g, nv) != -1) {
+            if (boost::get(vertex_color, g, nv) != -1) {
                 return boost::get(vertex_color, g, nv);
             } else {
                 return 1;
