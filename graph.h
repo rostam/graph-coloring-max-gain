@@ -1,7 +1,6 @@
 //
 // Created by rostam on 14.06.18.
 //
-
 #ifndef MY_GCOL_GRAPH_H
 #define MY_GCOL_GRAPH_H
 
@@ -165,6 +164,62 @@ public:
         return tuple_numOfColor_Colors();
     }
 
+    // In this idea, we will first color greedily and then select between the color groups
+    // those with the best discovered numbers.
+    std::tuple<int, std::vector<int>, int> greedy_color_martin_idea(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> m, int max_color) {
+        init_colors();
+        std::vector<unsigned int> forbiddenColors(num_v(), -1);
+        for (int v : order) {
+            forbiddenColors[0] = v;
+            for_each_n(v, [&](int n) {
+                int c = get_color_v(n);
+                if (c > 0) forbiddenColors[c] = v;
+            });
+            auto result = find_if(forbiddenColors.begin(), forbiddenColors.end(), [&](int i) { return i != v; });
+            auto res_color = distance(forbiddenColors.begin(), result);
+            put_color_v(v, res_color);
+        }
+        std::vector<int> colors;
+        std::set<int> unique_colors;
+        for_each_v([&](int v) {
+            int the_color = get_color_v(v) - 1;
+            colors.push_back(the_color);
+            unique_colors.insert(the_color);
+        });
+        std::vector<boost::numeric::ublas::vector<int>> discovered(unique_colors.size());
+        boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size2());
+        for (int i = 0; i < unique_colors.size(); i++) {
+            discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size2());
+        }
+        int cnt = 0;
+        for (int i = 0; i < colors.size(); i++) {
+            discovered[colors[i]] += column(m, i);
+        }
+        std::vector<std::pair<int,int>> discover_index_color(unique_colors.size());
+
+        int col = 0;
+        for (auto &d : discovered) {
+            int all_sum = 0;
+            for (int j : d) {
+                if (j == 1)
+                    all_sum += 1;
+            }
+            discover_index_color.emplace_back(std::make_pair(col, all_sum));
+            col++;
+        }
+
+        sort(begin(discover_index_color), end(discover_index_color), [&](std::pair<int,int> t1, std::pair<int,int> t2) { return t1.second > t2.second;});
+        std::vector<std::pair<int,int>> max_color_colors;
+        int after_discovered = 0;
+        int color_to = max_color;
+        if(max_color > unique_colors.size()) color_to = unique_colors.size();
+        for(int i=0;i<color_to;i++) {
+            max_color_colors.emplace_back(discover_index_color[i]);
+            after_discovered += discover_index_color[i].second;
+        }
+        return {unique_colors.size(), colors, after_discovered};
+    }
+
     int num_colors_of_neighbors(int v) {
         std::set<int> unique_colors;
         for_each_n(v, [&](int n) {
@@ -181,6 +236,15 @@ public:
             order[v] = v;
         });
         return greedy_color_order(order, max_color);
+    }
+
+    std::vector<int> natural_order() {
+        init_colors();
+        std::vector<int> order(num_v(), 0);
+        for_each_v([&](int v) {
+            order[v] = v;
+        });
+        return order;
     }
 
     std::vector<int> optimum_order() {
