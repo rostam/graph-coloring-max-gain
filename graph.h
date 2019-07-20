@@ -130,8 +130,8 @@ public:
 
     std::tuple<int, std::vector<int>> greedy_color_limited(const std::vector<int>& order, int max_color) {
         init_colors();
-        std::vector<unsigned int> forbiddenColors(num_v(), -1);
         for (int v : order) {
+            std::vector<unsigned int> forbiddenColors(num_v(), -1);
             forbiddenColors[0] = v;
             for_each_n(v, [&](int n) {
                 int c = get_color_v(n);
@@ -148,8 +148,9 @@ public:
 
     std::tuple<int, std::vector<int>> greedy_color_order(const std::vector<int>& order, int max_color) {
         init_colors();
-        std::vector<unsigned int> forbiddenColors(num_v(), -1);
         for (int v : order) {
+            // Since vertex numbering starts at zero, we initialize forbiddenColors with the (non-existing) vertex -1
+            std::vector<unsigned int> forbiddenColors(num_v(), -1);
             forbiddenColors[0] = v;
             for_each_n(v, [&](int n) {
                 int c = get_color_v(n);
@@ -168,8 +169,8 @@ public:
     // those with the best discovered numbers.
     std::tuple<int, std::vector<int>, int> greedy_color_martin_idea(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> m, int max_color) {
         init_colors();
-        std::vector<unsigned int> forbiddenColors(num_v(), -1);
         for (int v : order) {
+            std::vector<unsigned int> forbiddenColors(num_v(), -1);
             forbiddenColors[0] = v;
             for_each_n(v, [&](int n) {
                 int c = get_color_v(n);
@@ -292,7 +293,6 @@ public:
         V_iter vi, vi_end;
         std::tie(vi, vi_end) = vertices(g);
         std::list<int> vs(vi, vi_end);
-        std::vector<unsigned int> forbiddenColors(num_v(), -1);
         while (!vs.empty()) {
             int sat_v;
             std::vector<std::tuple<int, int>> vertex_num_color_neighbors;
@@ -307,6 +307,7 @@ public:
                                       });
             sat_v = std::get<0>(vc);
 
+            std::vector<unsigned int> forbiddenColors(num_v(), -1);
             forbiddenColors[0] = sat_v;
             for_each_n(sat_v, [&](int n) {
                 int c = get_color_v(n);

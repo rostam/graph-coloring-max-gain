@@ -65,8 +65,8 @@ int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
 //    auto matrix_arr = {"mats/nos3.mtx", "mats/plbuckle.mtx", "mats/bcsstk08.mtx", "mats/bcsstk09.mtx", "mats/G51.mtx", "mats/bcsstm13.mtx", "mats/gemat11.mtx"};
-    auto matrix_arr = {"mats/plbuckle.mtx"};
-    std::ofstream out(std::string("plbuckle_res.csv"));
+    auto matrix_arr = {"mats/bcsstk08.mtx"};
+    std::ofstream out(std::string("bcsstk08_res.csv"));
     out << "numOfColor,nat,ago,lfo,sat,single,multiple,k,ck" << endl;
     auto start = std::chrono::steady_clock::now();
     for (auto matrix_name : matrix_arr) {
