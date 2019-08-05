@@ -67,8 +67,8 @@ int main(int argc, const char *argv[]) {
 //    auto matrix_arr = {"mats/nos3.mtx", "mats/plbuckle.mtx", "mats/bcsstk08.mtx", "mats/bcsstk09.mtx", "mats/G51.mtx", "mats/bcsstm13.mtx", "mats/gemat11.mtx"};
     auto matrix_arr = {"mats/bcsstk08.mtx"};
     std::ofstream out(std::string("bcsstk08_res.csv"));
-    out << "numOfColor,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
-           "MaxGain_nat,MaxGain_ago,MaxGain_lfo,multiple,k,ck" << endl;
+    out << "p,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
+           "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink" << endl;
     auto start = std::chrono::steady_clock::now();
     for (auto matrix_name : matrix_arr) {
         matrix_market mm(matrix_name);
