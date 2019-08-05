@@ -167,7 +167,8 @@ public:
 
     // In this idea, we will first color greedily and then select between the color groups
     // those with the best discovered numbers.
-    std::tuple<int, std::vector<int>, int> greedy_color_martin_idea(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> m, int max_color) {
+    // Martin Idea: Max Discovered
+    std::tuple<int, std::vector<int>, int> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> m, int max_color) {
         init_colors();
         for (int v : order) {
             std::vector<unsigned int> forbiddenColors(num_v(), -1);

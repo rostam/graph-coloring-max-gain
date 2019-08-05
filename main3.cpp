@@ -67,13 +67,14 @@ int main(int argc, const char *argv[]) {
 //    auto matrix_arr = {"mats/nos3.mtx", "mats/plbuckle.mtx", "mats/bcsstk08.mtx", "mats/bcsstk09.mtx", "mats/G51.mtx", "mats/bcsstm13.mtx", "mats/gemat11.mtx"};
     auto matrix_arr = {"mats/bcsstk08.mtx"};
     std::ofstream out(std::string("bcsstk08_res.csv"));
-    out << "numOfColor,nat,ago,lfo,sat,single,multiple,k,ck" << endl;
+    out << "numOfColor,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
+           "MaxGain_nat,MaxGain_ago,MaxGain_lfo,multiple,k,ck" << endl;
     auto start = std::chrono::steady_clock::now();
     for (auto matrix_name : matrix_arr) {
         matrix_market mm(matrix_name);
         matrix<int> m = mm.to_ublas_matrix();
         graph g = matrix2graph_limited(m, 0);
-        auto[num_colors_natural_full, color_vec_natural_full, after_discovered] = g.greedy_color_martin_idea(g.natural_order(), m, 300);
+        auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000);
         auto[from, to, step] = get_bounds(num_colors_natural_full);
 //#pragma omp parallel for
         for (int k = 0; k < 1000; k += 100) {
@@ -94,10 +95,24 @@ int main(int argc, const char *argv[]) {
                 int all_discovered_newIdea = all_sum_new + all_discovered_color_zero_sum_new;//compute_discovered(color_vec_newIdea, m, color);
                 int all_discovered_lfo = all_sum_lfo + all_discovered_color_zero_sum_lfo;//compute_discovered(color_vec_lfo, m, color);
                 int all_discovered_sat = all_sum_sat + all_discovered_color_zero_sum_sat;//compute_discovered(color_vec_sat, m, color);
-                auto[num_colors_natural_full, color_vec_natural_full, after_discovered] = g.greedy_color_martin_idea(g.natural_order(), m, color);
-                auto[num_colors_multiple, color_vec_multiple] = g.greedy_color_limited(g.natural_order(), color);
-                auto[multiple_disc, multiple_zero_disc, multiple_misses, multiple_misses_zero] = compute_discovered_misses(color_vec_multiple, m, color);
-                out << color << "," << all_sum_nat << "," << all_sum_new << "," << all_sum_lfo << "," << all_sum_sat << "," <<  after_discovered << "," << multiple_disc << "," << k << "," << num_colors_natural_full<< endl;
+
+                auto[num_colors_nat_max_discovered, color_vec_nat_max_discovered, discovered_max_discovered_nat] = g.greedy_color_max_discovered(g.natural_order(), m, color);
+                std::vector<int> lfo_ord = g.largest_first_order();
+                auto[num_colors_lfo_max_discovered, color_vec_lfo_max_discovered, discovered_max_discovered_lfo] = g.greedy_color_max_discovered(lfo_ord, m, color);
+                std::vector<int> ago_ord = g.optimum_order();
+                auto[num_colors_ago_max_discovered, color_vec_ago_max_discovered, discovered_max_discovered_ago] = g.greedy_color_max_discovered(ago_ord, m, color);
+
+                auto[num_colors_max_gain_nat, color_vec_max_gain_nat] = g.greedy_color_limited(g.natural_order(), color);
+                auto[max_gain_nat, max_gain_nat_zero_disc, max_gain_nat_misses, max_gain_nat_misses_zero] = compute_discovered_misses(color_vec_max_gain_nat, m, color);
+
+                auto[num_colors_max_gain_lfo, color_vec_max_gain_lfo] = g.greedy_color_limited(lfo_ord, color);
+                auto[max_gain_lfo, max_gain_lfo_zero_disc, max_gain_lfo_misses, max_gain_lfo_misses_zero] = compute_discovered_misses(color_vec_max_gain_lfo, m, color);
+
+                auto[num_colors_max_gain_ago, color_vec_max_gain_ago] = g.greedy_color_limited(ago_ord, color);
+                auto[max_gain_ago, max_gain_ago_zero_disc, max_gain_ago_misses, max_gain_ago_misses_zero] = compute_discovered_misses(color_vec_max_gain_ago, m, color);
+                out << color << "," << all_sum_nat << "," << all_sum_new << "," << all_sum_lfo << "," << all_sum_sat << ","
+                <<  discovered_max_discovered_nat << "," <<discovered_max_discovered_ago << "," << discovered_max_discovered_lfo << ","
+                << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< endl;
             }
         }
     }
