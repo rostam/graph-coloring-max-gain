@@ -64,13 +64,13 @@ std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
-//    auto matrix_arr = {"nos3", "plbuckle", "bcsstk08", "bcsstk09", "G51", "bcsstm13", "gemat11","685_bus","ash608"};
-    auto matrix_arr = {"str_400"};
+    auto matrix_arr = {"nos3", "plbuckle", "bcsstk08", "bcsstk09", "G51", "bcsstm13", "bp_1400","bp_1600","685_bus","ash608","fs_183_3","str_400"};
     auto start = std::chrono::steady_clock::now();
+    std::ofstream out( std::string("results.csv"));
     for (auto matrix_name : matrix_arr) {
-        std::ofstream out(std::string(matrix_name) + std::string("_res.csv"));
+
         out << "p,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
-               "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink" << endl;
+               "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink,mat" << endl;
         matrix_market mm((std::string("mats/")+std::string(matrix_name) + std::string(".mtx")).c_str());
         matrix<int> m = mm.to_ublas_matrix();
         graph g = matrix2graph_limited(m, 0);
@@ -113,12 +113,13 @@ int main(int argc, const char *argv[]) {
                 auto[max_gain_ago, max_gain_ago_zero_disc, max_gain_ago_misses, max_gain_ago_misses_zero] = compute_discovered_misses(color_vec_max_gain_ago, m, color);
                 out << color << "," << all_sum_nat << "," << all_sum_new << "," << all_sum_lfo << "," << all_sum_sat << ","
                 <<  discovered_max_discovered_nat << "," <<discovered_max_discovered_ago << "," << discovered_max_discovered_lfo << ","
-                << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< endl;
+                << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< "," << matrix_name << endl;
             }
         }
-        out.flush();
-        out.close();
+
     }
+    out.flush();
+    out.close();
     auto end = std::chrono::steady_clock::now();
     cerr << "Elapsed time in milliseconds for the main loop: "
          << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
