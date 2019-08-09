@@ -64,20 +64,21 @@ std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
-//    auto matrix_arr = {"mats/nos3.mtx", "mats/plbuckle.mtx", "mats/bcsstk08.mtx", "mats/bcsstk09.mtx", "mats/G51.mtx", "mats/bcsstm13.mtx", "mats/gemat11.mtx"};
-    auto matrix_arr = {"mats/gemat11.mtx"};
-    std::ofstream out(std::string("gemat11_res.csv"));
-    out << "p,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
-           "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink" << endl;
+//    auto matrix_arr = {"nos3", "plbuckle", "bcsstk08", "bcsstk09", "G51", "bcsstm13", "gemat11","685_bus","ash608"};
+    auto matrix_arr = {"str_400"};
     auto start = std::chrono::steady_clock::now();
     for (auto matrix_name : matrix_arr) {
-        matrix_market mm(matrix_name);
+        std::ofstream out(std::string(matrix_name) + std::string("_res.csv"));
+        out << "p,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
+               "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink" << endl;
+        matrix_market mm((std::string("mats/")+std::string(matrix_name) + std::string(".mtx")).c_str());
         matrix<int> m = mm.to_ublas_matrix();
         graph g = matrix2graph_limited(m, 0);
         auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000);
         auto[from, to, step] = get_bounds(num_colors_natural_full);
 //#pragma omp parallel for
         for (int k = 0; k < 1000; k += 100) {
+            cerr << k << endl;
             graph g = matrix2graph_limited(m, k);
             auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
             auto[num_colors_natural, color_vec_natural] = g.greedy_color(100000);
@@ -115,13 +116,14 @@ int main(int argc, const char *argv[]) {
                 << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< endl;
             }
         }
+        out.flush();
+        out.close();
     }
     auto end = std::chrono::steady_clock::now();
     cerr << "Elapsed time in milliseconds for the main loop: "
          << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
          << " ms" << endl;
-    out.flush();
-    out.close();
+
     return 0;
 }
 
