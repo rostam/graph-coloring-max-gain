@@ -356,6 +356,8 @@ public:
                     }
                 }
             }
+            if(max_w < -2) return 0;
+//            std::cerr<<max_w<<std::endl;
             if (boost::get(vertex_color, g, nv) != -1) {
                 return boost::get(vertex_color, g, nv);
             } else {

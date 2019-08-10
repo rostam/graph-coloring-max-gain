@@ -33,7 +33,8 @@ graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int kk) 
                     E_missed += 2;
                 }
             }
-            int weight = E_discovered - E_missed;
+//            int weight = E_discovered - E_missed;
+            int weight = - E_missed;
             if (E_missed != 0) edges.emplace_back(i, j, weight);
         }
     }
@@ -64,21 +65,24 @@ std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
 int main(int argc, const char *argv[]) {
     using boost::numeric::ublas::matrix;
     using boost::numeric::ublas::matrix_column;
-    auto matrix_arr = {"nos3", "plbuckle", "bcsstk08", "bcsstk09", "G51", "bcsstm13", "bp_1400","bp_1600","685_bus","ash608","fs_183_3","str_400"};
+    auto matrix_arr = {"ash608","bcsstk08",
+                       "str_400","bcsstm13","nos3","fs_183_1","bp_1600",
+                       "plbuckle","fs_183_3","685_bus","bcsstk09",
+                       "str_200","bp_1400","G51","1138_bus"};
     auto start = std::chrono::steady_clock::now();
-    std::ofstream out( std::string("results.csv"));
+//#pragma omp parallel for
     for (auto matrix_name : matrix_arr) {
-
+        cout << matrix_name << endl;
+        std::ofstream out( std::string(matrix_name)+std::string("_res.csv"));
         out << "p,ignore_nat,ignore_ago,ignore_lfo,ignore_sat,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
                "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink,mat" << endl;
-        matrix_market mm((std::string("mats/")+std::string(matrix_name) + std::string(".mtx")).c_str());
+        std::string matrix_file_name = (std::string("mats/")+std::string(matrix_name) + std::string(".mtx"));
+        matrix_market mm(matrix_file_name.c_str());
         matrix<int> m = mm.to_ublas_matrix();
         graph g = matrix2graph_limited(m, 0);
         auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000);
         auto[from, to, step] = get_bounds(num_colors_natural_full);
-//#pragma omp parallel for
         for (int k = 0; k < 1000; k += 100) {
-            cerr << k << endl;
             graph g = matrix2graph_limited(m, k);
             auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
             auto[num_colors_natural, color_vec_natural] = g.greedy_color(100000);
@@ -116,10 +120,10 @@ int main(int argc, const char *argv[]) {
                 << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< "," << matrix_name << endl;
             }
         }
-
+        out.flush();
+        out.close();
     }
-    out.flush();
-    out.close();
+
     auto end = std::chrono::steady_clock::now();
     cerr << "Elapsed time in milliseconds for the main loop: "
          << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
