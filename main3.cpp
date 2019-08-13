@@ -83,8 +83,6 @@ auto matrix_arr = {"bcsstk08"};
         std::string matrix_file_name = (std::string("mats/")+std::string(matrix_name) + std::string(".mtx"));
         matrix_market mm(matrix_file_name.c_str());
         matrix<int> m = mm.to_ublas_matrix();
-//        cerr << m.size1() << " " << m.size2() << " " << m.
-//        continue;
         graph g = matrix2graph_limited(m, 0);
         cerr << g.num_v();
         auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000);
@@ -127,7 +125,7 @@ auto matrix_arr = {"bcsstk08"};
                 out << color << "," << all_sum_nat << "," << all_sum_new << "," << all_sum_lfo << "," << all_sum_sat << ","
                 <<  discovered_max_discovered_nat << "," <<discovered_max_discovered_ago << "," << discovered_max_discovered_lfo << ","
                 << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << "," << num_colors_natural_full<< "," << matrix_name
-                << ", " << mm.nz << ", " << mm.M << ", " << mm.N  << endl;
+                << "," << mm.nz << "," << mm.M << "," << mm.N  << endl;
             }
         }
         out.flush();
@@ -159,7 +157,6 @@ std::tuple<int, int, int, int> compute_discovered_misses(const std::vector<int> 
             discovered[color_vec[i]] += column(m, i);
         }
     }
-//    std::cerr << "The number of vertices with color zero: " << cnt << std::endl;
     int all_sum = 0;
     int all_misses = 0;
     for (auto &misse : discovered) {
@@ -205,24 +202,20 @@ std::tuple<int, int, int, int> compute_discovered_misses_ignore(const std::vecto
 
     int cnt = 0;
     for (int i = 0; i < color_vec.size(); i++) {
-//        cerr << color_vec << endl;
-//        if (color_vec[i] < color) {
-//cerr << column(m,i) << endl;
-//break;
-            discovered[color_vec[i]-1] = discovered[color_vec[i]-1] + column(m, i);
+        if (color_vec[i] < color) {
+            discovered[color_vec[i] - 1] = discovered[color_vec[i] - 1] + column(m, i);
 //        } else {
 //            cnt++;
 //            zeros += column(m, i);
 //        }
+        }
     }
 
-//    std::cerr << "The number of vertices with color zero: " << cnt << std::endl;
     int all_sum = 0;
     int all_misses = 0;
 
     for (auto &misse : discovered) {
         for(auto it1 = misse.begin(); it1 != misse.end(); ++it1) {
-//        for (int j : misse) {
             if (*it1 == 1) {
                 all_sum += 1;
             }
