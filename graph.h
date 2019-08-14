@@ -189,16 +189,15 @@ public:
             unique_colors.insert(the_color);
         });
         std::vector<boost::numeric::ublas::vector<int>> discovered(unique_colors.size());
-        boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size2());
+        boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size1());
         for (int i = 0; i < unique_colors.size(); i++) {
-            discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size2());
+            discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
         }
         int cnt = 0;
         for (int i = 0; i < colors.size(); i++) {
             discovered[colors[i]] += column(m, i);
         }
         std::vector<std::pair<int,int>> discover_index_color(unique_colors.size());
-
         int col = 0;
         for (auto &d : discovered) {
             int all_sum = 0;
@@ -356,7 +355,7 @@ public:
                     }
                 }
             }
-            if(max_w < -2) return 0;
+//            if(max_w < -1) return 0;
 //            std::cerr<<max_w<<std::endl;
             if (boost::get(vertex_color, g, nv) != -1) {
                 return boost::get(vertex_color, g, nv);
