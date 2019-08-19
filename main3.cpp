@@ -51,7 +51,7 @@ graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int kk) 
     return g;
 }
 
-std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
+std::tuple<int, int, int> get_bounds_colors(int num_colors_natural_full) {
     if (num_colors_natural_full > 220) {
         return {num_colors_natural_full - 200, num_colors_natural_full, 10};
     } else if (num_colors_natural_full > 120) {
@@ -63,6 +63,10 @@ std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
     } else {
         return {num_colors_natural_full - 10, num_colors_natural_full, 1};
     }
+}
+
+std::tuple<int, int, int> get_bounds_k(int num_cols) {
+    return {0,num_cols/2, num_cols/25};
 }
 
 int main(int argc, const char *argv[]) {
@@ -97,8 +101,9 @@ int main(int argc, const char *argv[]) {
         cerr << g.num_v();
         auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000);
         cerr << endl << num_colors_natural_full << endl;
-        auto[from, to, step] = get_bounds(num_colors_natural_full);
-        for (int k = 0; k < 1000; k += 100) {
+        auto[from, to, step] = get_bounds_colors(num_colors_natural_full);
+        auto[kfrom, kto, kstep] = get_bounds_k(mm.N);
+        for (int k = kfrom; k <= kto; k += kstep) {
             graph g = matrix2graph_limited(m, k);
             auto[num_colors_natural_full, color_vec_natural_full] = g.greedy_color(1000000);
             auto[num_colors_natural, color_vec_natural] = g.greedy_color(100000);
