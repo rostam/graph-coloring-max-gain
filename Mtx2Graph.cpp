@@ -120,6 +120,32 @@ std::map<int,std::vector<int>> matrix_market::to_mymat() {
     return mymat;
 }
 
+/**
+ * \brief return the bipartite graph generated from the matrix
+ *
+ * @param G_b the result matrix
+ * @return
+ */
+bool matrix_market::MtxToBipGraph(Graph& G_b) {
+    if (mm_is_symmetric(matcode)) {
+        // add the edges to the graph object
+        for (int i = 0; i < nz; ++i) {
+            add_edge(I[i], M + J[i], 0, G_b);
+            if (I[i] != J[i])
+                add_edge(J[i], M + I[i], 0, G_b);
+        }
+    } else {
+        // add the edges to the graph object
+        for (int i = 0; i < nz; ++i) {
+            add_edge(I[i], M + J[i], 0, G_b);
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+
+
+
 matrix_market::~matrix_market() {
   free(I);
   free(J);

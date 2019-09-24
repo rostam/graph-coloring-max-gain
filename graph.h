@@ -39,10 +39,20 @@ class graph {
     Graph g;
     property_map<Graph, vertex_color_t>::type color;
 public:
+    /**
+     * A constructor which creates a graph with the given number of vertices
+     * @param num_vertices the given number of vertices
+     */
     graph(unsigned long num_vertices) : g(Graph(num_vertices)) {}
 
     graph()=default;
 
+    /**
+     * Adds an edge with the given vertices as endpoints and its weight
+     * @param i
+     * @param j
+     * @param weight
+     */
     void add_edge(int i, int j, int weight) { boost::add_edge(i, j, weight, g); }
 
     void init_colors() {
@@ -50,12 +60,30 @@ public:
         for_each_v([&](Ver v) { put_color_v(v, 0); });
     }
 
+    /**
+     * Number of vertices
+     * @returns number of vertices
+     */
     unsigned long num_v() { return boost::num_vertices(g); }
 
+    /**
+     * Number of edges
+     * @returns number of edges
+     */
     unsigned long num_e() { return boost::num_edges(g); }
 
+    /**
+     * Returns the color of a given vertex
+     * @param v the given matrix
+     * @returns the color of the vertex v
+     */
     int get_color_v(int v) { return boost::get(vertex_color, g, v); }
 
+    /**
+     * Set the color of the given vertex with the given color
+     * @param v the given vertex
+     * @param c the given color
+     */
     void put_color_v(int v, int c) { put(color, v, c); }
 
 
@@ -221,6 +249,11 @@ public:
         return {unique_colors.size(), colors, after_discovered};
     }
 
+    /**
+     * Computes the number of distinct colors in the neighbors of the given vertex
+     * @param v The given vertex
+     * @return the number of distinct colors in the neighbors of v
+     */
     int num_colors_of_neighbors(int v) {
         std::set<int> unique_colors;
         for_each_n(v, [&](int n) {
@@ -364,6 +397,45 @@ public:
             }
         }
     }
+
+    std::pair<int,int> d2color() {
+//        std::vector<unsigned int> V = V_c;
+        property_map<Graph, vertex_color_t>::type color = get(vertex_color, G_b);
+        std::vector<unsigned int> N_2;
+        vector<unsigned int> forbiddenColors(num_vertices(G_b), -1);
+        //All edges in E_S have edge_weight=1; otherwise edge_weight=0
+        //Initialize colors
+        for_each(V.begin(), V.end(), [&](Ver v) { put(color, v, 0); });
+        //Iterate over all vertices which should be colored
+        for_each(V.begin(), V.end(), [&](unsigned int v) {
+            forbiddenColors[0] = v;
+            if (IncidentToReqEdge(G_b, v)) {
+                //Get the distance-2 neighbors
+                if (restricted)
+                    N_2 = neighbors::N_2restricted(G_b, v);
+                else
+                    N_2 = neighbors::N_2(G_b, v);
+                //Iterate over distance-2 neighbors
+                for_each(N_2.begin(), N_2.end(), [&](unsigned int n_2) {
+                    //Mark colors which are used by distance-2 neighbors in forbiddenColors
+                    if (get(vertex_color, G_b, n_2) > 0) {
+                        forbiddenColors[get(vertex_color, G_b, n_2)] = v;
+                    }
+                });
+
+                //Find first color which can be assigned to v
+                vector<unsigned int>::iterator result = find_if(forbiddenColors.begin(), forbiddenColors.end(),
+                                                                bind1st(not_equal_to<int>(), v));
+
+                //Color v
+                put(color, v, distance(forbiddenColors.begin(), result));
+            } else {
+                put(color, v, 0);
+            }
+        });
+        return num_colors_d2(G_b);
+    }
+
 };
 
 
