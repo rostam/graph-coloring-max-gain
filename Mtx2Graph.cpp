@@ -144,8 +144,9 @@ bool matrix_market::MtxToBipGraph(Graph& G_b) {
     return EXIT_SUCCESS;
 }
 
-
-
+/**
+ *
+ */
 matrix_market::~matrix_market() {
   free(I);
   free(J);

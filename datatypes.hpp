@@ -56,6 +56,12 @@ static void for_each_neighbor(Graph& g, const Ver& v, Lambda func) {
 static auto ge_degree = [](pair<int,int> t1, pair<int,int> t2){return t1.second>=t2.second;};
 static auto lt_degree = [](pair<int,int> t1, pair<int,int> t2){return t1.second<t2.second;};
 
+/**
+ *
+ * @param t1
+ * @param t2
+ * @return
+ */
 static bool cmp_degrees(pair<int,pair<int,int> > t1, pair<int,pair<int,int> > t2)
 {
 	if (t1.second.second < t2.second.second) {

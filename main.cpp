@@ -15,6 +15,12 @@ compute_misses(int num_colors, const std::vector<int> &color_vec, boost::numeric
 using std::cout;
 using std::endl;
 
+/**
+ *
+ * @param m
+ * @param index
+ * @return
+ */
 graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int index) {
     graph g(m.size1());
     std::vector<std::tuple<int, int, int>> edges;
@@ -49,6 +55,11 @@ graph matrix2graph_limited(const boost::numeric::ublas::matrix<int> &m, int inde
     return g;
 }
 
+/**
+ *
+ * @param m
+ * @return
+ */
 graph matrix2graph(const boost::numeric::ublas::matrix<int> &m) {
     graph g(m.size1());
     std::vector<std::tuple<int, int, int>> edges;
@@ -76,6 +87,11 @@ graph matrix2graph(const boost::numeric::ublas::matrix<int> &m) {
     return g;
 }
 
+/**
+ *
+ * @param num_colors_natural_full
+ * @return
+ */
 std::tuple<int, int, int> get_bounds(int num_colors_natural_full) {
     if(num_colors_natural_full > 220) {
         return {num_colors_natural_full - 200, num_colors_natural_full, 20};

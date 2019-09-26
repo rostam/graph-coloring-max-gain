@@ -263,6 +263,11 @@ public:
         return unique_colors.size();
     }
 
+    /**
+     * Coloring with the consideration that we have a maxnimum number of colors
+     * @param max_color the maximum number of colors that can be used for coloring.
+     * @return the coloring and number of colors
+     */
     std::tuple<int, std::vector<int>> greedy_color(int max_color) {
         init_colors();
         std::vector<int> order(num_v(), 0);
@@ -272,6 +277,11 @@ public:
         return greedy_color_order(order, max_color);
     }
 
+    /*
+     * Computes the natural ordering which is nothing than a list of numbers from zero
+     * the number of vertices minus 1
+     * @return the natural ordering
+     */
     std::vector<int> natural_order() {
         init_colors();
         std::vector<int> order(num_v(), 0);
@@ -281,6 +291,10 @@ public:
         return order;
     }
 
+    /**
+     *
+     * @return
+     */
     std::vector<int> optimum_order() {
         std::vector<std::tuple<int, int>> vertex_weight;
         for_each_v([&](int v) {
@@ -305,6 +319,10 @@ public:
         return ret;
     }
 
+    /**
+     *
+     * @return
+     */
     std::vector<int> largest_first_order() {
         std::vector<std::tuple<int, int>> vertex_weight;
         for_each_v([&](int v) {
@@ -321,6 +339,11 @@ public:
         return ret;
     }
 
+    /**
+     *
+     * @param max_color
+     * @return
+     */
     std::tuple<int, std::vector<int>> saturation_degree_ordering_coloring(int max_color) {
         init_colors();
         V_iter vi, vi_end;
@@ -356,6 +379,10 @@ public:
         return tuple_numOfColor_Colors();
     }
 
+    /**
+     *
+     * @return
+     */
     std::tuple<int, std::vector<int>> tuple_numOfColor_Colors() {
         std::vector<int> colors;
         std::set<int> unique_colors;
@@ -370,6 +397,13 @@ public:
         return {unique_colors.size(), colors};
     }
 
+    /**
+     *
+     * @param res_color
+     * @param max_color
+     * @param v
+     * @return
+     */
     int get_suitable_color(int res_color, int max_color, int v) {
         if (res_color < max_color) {
             return res_color;
@@ -398,43 +432,44 @@ public:
         }
     }
 
-    std::pair<int,int> d2color() {
-//        std::vector<unsigned int> V = V_c;
-        property_map<Graph, vertex_color_t>::type color = get(vertex_color, G_b);
-        std::vector<unsigned int> N_2;
-        vector<unsigned int> forbiddenColors(num_vertices(G_b), -1);
-        //All edges in E_S have edge_weight=1; otherwise edge_weight=0
-        //Initialize colors
-        for_each(V.begin(), V.end(), [&](Ver v) { put(color, v, 0); });
-        //Iterate over all vertices which should be colored
-        for_each(V.begin(), V.end(), [&](unsigned int v) {
-            forbiddenColors[0] = v;
-            if (IncidentToReqEdge(G_b, v)) {
-                //Get the distance-2 neighbors
-                if (restricted)
-                    N_2 = neighbors::N_2restricted(G_b, v);
-                else
-                    N_2 = neighbors::N_2(G_b, v);
-                //Iterate over distance-2 neighbors
-                for_each(N_2.begin(), N_2.end(), [&](unsigned int n_2) {
-                    //Mark colors which are used by distance-2 neighbors in forbiddenColors
-                    if (get(vertex_color, G_b, n_2) > 0) {
-                        forbiddenColors[get(vertex_color, G_b, n_2)] = v;
-                    }
-                });
-
-                //Find first color which can be assigned to v
-                vector<unsigned int>::iterator result = find_if(forbiddenColors.begin(), forbiddenColors.end(),
-                                                                bind1st(not_equal_to<int>(), v));
-
-                //Color v
-                put(color, v, distance(forbiddenColors.begin(), result));
-            } else {
-                put(color, v, 0);
-            }
-        });
-        return num_colors_d2(G_b);
-    }
+//
+//    std::pair<int,int> d2color() {
+////        std::vector<unsigned int> V = V_c;
+//        property_map<Graph, vertex_color_t>::type color = get(vertex_color, G_b);
+//        std::vector<unsigned int> N_2;
+//        vector<unsigned int> forbiddenColors(num_vertices(G_b), -1);
+//        //All edges in E_S have edge_weight=1; otherwise edge_weight=0
+//        //Initialize colors
+//        for_each(V.begin(), V.end(), [&](Ver v) { put(color, v, 0); });
+//        //Iterate over all vertices which should be colored
+//        for_each(V.begin(), V.end(), [&](unsigned int v) {
+//            forbiddenColors[0] = v;
+//            if (IncidentToReqEdge(G_b, v)) {
+//                //Get the distance-2 neighbors
+//                if (restricted)
+//                    N_2 = neighbors::N_2restricted(G_b, v);
+//                else
+//                    N_2 = neighbors::N_2(G_b, v);
+//                //Iterate over distance-2 neighbors
+//                for_each(N_2.begin(), N_2.end(), [&](unsigned int n_2) {
+//                    //Mark colors which are used by distance-2 neighbors in forbiddenColors
+//                    if (get(vertex_color, G_b, n_2) > 0) {
+//                        forbiddenColors[get(vertex_color, G_b, n_2)] = v;
+//                    }
+//                });
+//
+//                //Find first color which can be assigned to v
+//                vector<unsigned int>::iterator result = find_if(forbiddenColors.begin(), forbiddenColors.end(),
+//                                                                bind1st(not_equal_to<int>(), v));
+//
+//                //Color v
+//                put(color, v, distance(forbiddenColors.begin(), result));
+//            } else {
+//                put(color, v, 0);
+//            }
+//        });
+//        return num_colors_d2(G_b);
+//    }
 
 };
 
