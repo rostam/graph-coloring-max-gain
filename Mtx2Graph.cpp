@@ -52,6 +52,7 @@ matrix_market::matrix_market(const char* filename) {
     /* reseve memory for matrices */
     I = (unsigned int *) malloc(nz * sizeof(unsigned int));
     J = (unsigned int *) malloc(nz * sizeof(unsigned int));
+    val = (double *) malloc(nz*sizeof(double));
 
     if (mm_is_pattern(matcode)) {
         for (i = 0; i < nz; i++) {
@@ -60,14 +61,14 @@ matrix_market::matrix_market(const char* filename) {
             J[i]--;
         }
     } else {
-        double *val;
+//        double *val;
         val = (double *) malloc(nz * sizeof(double));
         for (i = 0; i < nz; i++) {
             fscanf(file, "%u %u %lg\n", &I[i], &J[i], &val[i]);
             I[i]--;  /* adjust from 1-based to 0-based */
             J[i]--;
         }
-        free(val);
+//        free(val);
     }
 
     if (file != stdin) fclose(file);
@@ -79,16 +80,16 @@ matrix_market::matrix_market(const char* filename) {
  * @param G_b the result matrix
  * @return
  */
-boost::numeric::ublas::matrix<int> matrix_market::to_ublas_matrix() {
-    boost::numeric::ublas::matrix<int> m = boost::numeric::ublas::zero_matrix<int>(M, N);
+boost::numeric::ublas::matrix<double> matrix_market::to_ublas_matrix() {
+    boost::numeric::ublas::matrix<double> m = boost::numeric::ublas::zero_matrix<double>(M, N);
     if (mm_is_symmetric(matcode)) {
         for (int i = 0; i < nz; ++i) {
-            m(I[i], J[i]) = 1;
-            m(J[i], I[i]) = 1;
+            m(I[i], J[i]) = val[i];
+            m(J[i], I[i]) = val[i];
         }
     } else {
         for (int i = 0; i < nz; ++i) {
-            m(I[i], J[i]) = 1;
+            m(I[i], J[i]) = val[i];
         }
     }
 

@@ -13,6 +13,7 @@
 #include <fstream>
 #include <boost/dynamic_bitset.hpp>
 #include <tuple>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
 
 using boost::property;
 using boost::edge_name;
@@ -196,7 +197,7 @@ public:
     // In this idea, we will first color greedily and then select between the color groups
     // those with the best discovered numbers.
     // Martin Idea: Max Discovered
-    std::tuple<int, std::vector<int>, int> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> m, int max_color) {
+    std::tuple<int, std::vector<int>, int> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> mm, int max_color) {
         init_colors();
         for (int v : order) {
             std::vector<unsigned int> forbiddenColors(num_v(), -1);
@@ -216,14 +217,24 @@ public:
             colors.push_back(the_color);
             unique_colors.insert(the_color);
         });
+
+        boost::numeric::ublas::matrix<double> m = mm;
+        for (boost::numeric::ublas::matrix<double>::iterator1 it1 = m.begin1(); it1 != m.end1(); ++it1) {
+            for (boost::numeric::ublas::matrix<double>::iterator2 it2 = it1.begin(); it2 != it1.end(); ++it2) {
+                if(*it2 != 0) *it2 = 1;
+            }
+        }
+
+
         std::vector<boost::numeric::ublas::vector<int>> discovered(unique_colors.size());
+        std::vector<boost::numeric::ublas::vector<int>> discovered_with_nz(unique_colors.size());
         boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size1());
         for (int i = 0; i < unique_colors.size(); i++) {
             discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
         }
         int cnt = 0;
         for (int i = 0; i < colors.size(); i++) {
-            discovered[colors[i]] += column(m, i);
+            discovered[colors[i]] += boost::numeric::ublas::column(m, i);
         }
         std::vector<std::pair<int,int>> discover_index_color(unique_colors.size());
         int col = 0;

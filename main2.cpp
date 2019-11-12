@@ -139,7 +139,7 @@ compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ubl
     int all_misses = 0;
     for (auto &misse : discovered) {
         for (int j : misse) {
-            if (j == 1)
+            if (j != 1)
                 all_sum += 1;
             else
                 all_misses += j;

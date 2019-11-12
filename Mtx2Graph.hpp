@@ -22,7 +22,7 @@
 struct matrix_market {
     matrix_market(const char *filename);
 
-    boost::numeric::ublas::matrix<int> to_ublas_matrix();
+    boost::numeric::ublas::matrix<double> to_ublas_matrix();
 
     std::map<int, std::vector<int>> to_mymat();
 
@@ -41,5 +41,6 @@ struct matrix_market {
     int nz;
     unsigned int *I;
     unsigned int *J;
+    double *val;
     MM_typecode matcode;
 };
