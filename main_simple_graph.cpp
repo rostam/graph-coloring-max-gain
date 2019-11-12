@@ -105,10 +105,11 @@ int main(int argc, const char *argv[]) {
 //                       "str_400","bcsstm13","nos3","bp_1600",
 //                       "plbuckle","fs_183_3","685_bus","bcsstk09",
 //                       "str_200","bp_1400","G51","1138_bus"};
-//    auto matrix_arr = {"str_400","nos3","bp_1600",
-//                       "plbuckle","fs_183_3","685_bus",
-//                       "str_200","bp_1400","G51","1138_bus"};
-    auto matrix_arr = {"G51"};
+    auto matrix_arr = {"bcsstk08",
+                       "str_400","bcsstm13","nos3","bp_1600",
+                       "plbuckle","fs_183_3","685_bus","bcsstk09",
+                       "str_200","bp_1400","1138_bus"};
+//    auto matrix_arr = {"nos3"};
     auto start = std::chrono::steady_clock::now();
 //#pragma omp parallel for
     for (auto matrix_name : matrix_arr) {
@@ -143,36 +144,34 @@ int main(int argc, const char *argv[]) {
                         color_vec_natural, m, color);
                 auto[all_sum_new, all_discovered_color_zero_sum_new, all_misses_new, all_misses_color_zero_sum_new, fnd_ignore_ago] = compute_discovered_misses_ignore(
                         color_vec_newIdea, m, color);
-                auto[all_sum_lfo, all_discovered_color_zero_sum_lfo, all_misses_lfo, all_misses_color_zero_sum_lfo,fnd_ignore_lfo] = compute_discovered_misses_ignore(
+                auto[all_sum_lfo, all_discovered_color_zero_sum_lfo, all_misses_lfo, all_misses_color_zero_sum_lfo, fnd_ignore_lfo] = compute_discovered_misses_ignore(
                         color_vec_lfo, m, color);
 //                auto[all_sum_sat, all_discovered_color_zero_sum_sat, all_misses_sat, all_misses_color_zero_sum_sat,fnd_ignore_sat] = compute_discovered_misses_ignore(color_vec_sat, m);
-
-                int all_discovered_natural = all_sum_nat + all_discovered_color_zero_sum_nat;//compute_discovered(color_vec_natural, m, color);
-                int all_discovered_newIdea = all_sum_new + all_discovered_color_zero_sum_new;//compute_discovered(color_vec_newIdea, m, color);
+                int all_discovered_natural = all_sum_nat +
+                                             all_discovered_color_zero_sum_nat;//compute_discovered(color_vec_natural, m, color);
+                int all_discovered_newIdea = all_sum_new +
+                                             all_discovered_color_zero_sum_new;//compute_discovered(color_vec_newIdea, m, color);
                 int all_discovered_lfo =
                         all_sum_lfo + all_discovered_color_zero_sum_lfo;//compute_discovered(color_vec_lfo, m, color);
 //                int all_discovered_sat = all_sum_sat + all_discovered_color_zero_sum_sat;//compute_discovered(color_vec_sat, m, color);
 
-                auto[num_colors_nat_max_discovered, color_vec_nat_max_discovered, discovered_max_discovered_nat] = g.greedy_color_max_discovered(
+                auto[num_colors_nat_max_discovered, color_vec_nat_max_discovered, discovered_max_discovered_nat, fnd_MaxDiscovered_nat] = g.greedy_color_max_discovered(
                         g.natural_order(), m, color);
                 std::vector<int> lfo_ord = g.largest_first_order();
-                auto[num_colors_lfo_max_discovered, color_vec_lfo_max_discovered, discovered_max_discovered_lfo] = g.greedy_color_max_discovered(
+                auto[num_colors_lfo_max_discovered, color_vec_lfo_max_discovered, discovered_max_discovered_lfo, fnd_MaxDiscovered_lfo] = g.greedy_color_max_discovered(
                         lfo_ord, m, color);
                 std::vector<int> ago_ord = g.optimum_order();
-                auto[num_colors_ago_max_discovered, color_vec_ago_max_discovered, discovered_max_discovered_ago] = g.greedy_color_max_discovered(
+                auto[num_colors_ago_max_discovered, color_vec_ago_max_discovered, discovered_max_discovered_ago, fnd_MaxDiscovered_ago] = g.greedy_color_max_discovered(
                         ago_ord, m, color);
-
                 auto[num_colors_max_gain_nat, color_vec_max_gain_nat] = g.greedy_color_limited(g.natural_order(),
                                                                                                color);
-                auto[max_gain_nat, max_gain_nat_zero_disc, max_gain_nat_misses, max_gain_nat_misses_zero,fnd_MaxGain_nat] = compute_discovered_misses(
+                auto[max_gain_nat, max_gain_nat_zero_disc, max_gain_nat_misses, max_gain_nat_misses_zero, fnd_MaxGain_nat] = compute_discovered_misses(
                         color_vec_max_gain_nat, m, color);
-
                 auto[num_colors_max_gain_lfo, color_vec_max_gain_lfo] = g.greedy_color_limited(lfo_ord, color);
-                auto[max_gain_lfo, max_gain_lfo_zero_disc, max_gain_lfo_misses, max_gain_lfo_misses_zero,fnd_MaxGain_lfo] = compute_discovered_misses(
+                auto[max_gain_lfo, max_gain_lfo_zero_disc, max_gain_lfo_misses, max_gain_lfo_misses_zero, fnd_MaxGain_lfo] = compute_discovered_misses(
                         color_vec_max_gain_lfo, m, color);
-
                 auto[num_colors_max_gain_ago, color_vec_max_gain_ago] = g.greedy_color_limited(ago_ord, color);
-                auto[max_gain_ago, max_gain_ago_zero_disc, max_gain_ago_misses, max_gain_ago_misses_zero,fnd_MaxGain_ago] = compute_discovered_misses(
+                auto[max_gain_ago, max_gain_ago_zero_disc, max_gain_ago_misses, max_gain_ago_misses_zero, fnd_MaxGain_ago] = compute_discovered_misses(
                         color_vec_max_gain_ago, m, color);
                 out << color << "," << all_sum_nat << "," << all_sum_new << "," << all_sum_lfo
                     << "," //<< all_sum_sat << ","
@@ -180,9 +179,11 @@ int main(int argc, const char *argv[]) {
                     << discovered_max_discovered_lfo << ","
                     << max_gain_nat << "," << max_gain_ago << "," << max_gain_lfo << "," << k << ","
                     << num_colors_natural_full << "," << matrix_name
-                    << "," << mm.M << "," << mm.N << "," << mycnt << fnm
-                    << fnd_ignore_nat << fnd_ignore_ago << fnd_ignore_lfo
-                    <<  endl;
+                    << "," << mm.M << "," << mm.N << "," << mycnt << fnm << ","
+                    << fnd_ignore_nat << "," << fnd_ignore_ago << "," << fnd_ignore_lfo << ","
+                    << fnd_MaxDiscovered_nat << "," << fnd_MaxDiscovered_ago << "," << fnd_MaxDiscovered_lfo << ","
+                    << fnd_MaxGain_nat << ","<< fnd_MaxGain_ago << ","<< fnd_MaxGain_lfo
+                    << endl;
             }
         }
         out.flush();
@@ -209,7 +210,7 @@ compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ubl
     boost::numeric::ublas::matrix<double> m = mm;
     for (boost::numeric::ublas::matrix<double>::iterator1 it1 = m.begin1(); it1 != m.end1(); ++it1) {
         for (boost::numeric::ublas::matrix<double>::iterator2 it2 = it1.begin(); it2 != it1.end(); ++it2) {
-            if(*it2 != 0) *it2 = 1;
+            if (*it2 != 0) *it2 = 1;
         }
     }
 
@@ -233,17 +234,17 @@ compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ubl
             discovered_with_nnz[color_vec[i]] += column(mm, i);
         }
     }
+
     double fnd = 0;
     int all_sum = 0;
     int all_misses = 0;
-
-
-    int i=0, j=0;
+    int i = 0;
     for (auto &misse : discovered) {
+        int j = 0;
         for (auto it1 = misse.begin(); it1 != misse.end(); ++it1) {
             if (*it1 == 1) {
                 all_sum += 1;
-                fnd += pow(discovered_with_nnz[i][j],2);
+                fnd += pow(discovered_with_nnz[i][j], 2);
             }
 //            else
 //                all_misses += j;
@@ -264,7 +265,7 @@ compute_discovered_misses(const std::vector<int> &color_vec, boost::numeric::ubl
 //    cerr << "Elapsed time in milliseconds : "
 //         << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
 //         << " ms" << endl;
-    return {all_sum, all_discovered_color_zero_sum, all_misses, all_misses_color_zero_sum, fnd};
+    return {all_sum, all_discovered_color_zero_sum, all_misses, all_misses_color_zero_sum, sqrt(fnd)};
 }
 
 std::tuple<int, int, int, int, double>
@@ -273,7 +274,7 @@ compute_discovered_misses_ignore(const std::vector<int> &color_vec, boost::numer
     boost::numeric::ublas::matrix<double> m = mm;
     for (boost::numeric::ublas::matrix<double>::iterator1 it1 = m.begin1(); it1 != m.end1(); ++it1) {
         for (boost::numeric::ublas::matrix<double>::iterator2 it2 = it1.begin(); it2 != it1.end(); ++it2) {
-            if(*it2 != 0) *it2 = 1;
+            if (*it2 != 0) *it2 = 1;
         }
     }
     auto start = std::chrono::steady_clock::now();
@@ -303,12 +304,13 @@ compute_discovered_misses_ignore(const std::vector<int> &color_vec, boost::numer
     int all_sum = 0;
     int all_misses = 0;
     double fnd = 0;
-    int i=0, j=0;
+    int i = 0, j = 0;
     for (auto &misse : discovered) {
+        int j = 0;
         for (auto it1 = misse.begin(); it1 != misse.end(); ++it1) {
             if (*it1 == 1) {
                 all_sum += 1;
-                fnd += pow(discovered_with_nnz[i][j],2);
+                fnd += pow(discovered_with_nnz[i][j], 2);
             }
 //            else
 //                all_misses += j;
@@ -329,5 +331,5 @@ compute_discovered_misses_ignore(const std::vector<int> &color_vec, boost::numer
 //    cerr << "Elapsed time in milliseconds : "
 //         << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
 //         << " ms" << endl;
-    return {all_sum, all_discovered_color_zero_sum, all_misses, all_misses_color_zero_sum, fnd};
+    return {all_sum, all_discovered_color_zero_sum, all_misses, all_misses_color_zero_sum, sqrt(fnd)};
 }

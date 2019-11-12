@@ -197,7 +197,7 @@ public:
     // In this idea, we will first color greedily and then select between the color groups
     // those with the best discovered numbers.
     // Martin Idea: Max Discovered
-    std::tuple<int, std::vector<int>, int> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> mm, int max_color) {
+    std::tuple<int, std::vector<int>, int, double> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> mm, int max_color) {
         init_colors();
         for (int v : order) {
             std::vector<unsigned int> forbiddenColors(num_v(), -1);
@@ -225,27 +225,35 @@ public:
             }
         }
 
-
         std::vector<boost::numeric::ublas::vector<int>> discovered(unique_colors.size());
         std::vector<boost::numeric::ublas::vector<int>> discovered_with_nz(unique_colors.size());
         boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size1());
         for (int i = 0; i < unique_colors.size(); i++) {
             discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
+            discovered_with_nz[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
         }
         int cnt = 0;
         for (int i = 0; i < colors.size(); i++) {
             discovered[colors[i]] += boost::numeric::ublas::column(m, i);
+            discovered_with_nz[colors[i]] += boost::numeric::ublas::column(mm, i);
         }
         std::vector<std::pair<int,int>> discover_index_color(unique_colors.size());
         int col = 0;
+        int i=0;
+        double fnd = 0;
         for (auto &d : discovered) {
             int all_sum = 0;
+            int k=0;
             for (int j : d) {
-                if (j == 1)
+                if (j == 1) {
                     all_sum += 1;
+                    fnd += pow(discovered_with_nz[i][j],2);
+                }
+                k++;
             }
             discover_index_color.emplace_back(std::make_pair(col, all_sum));
             col++;
+            i++;
         }
 
         sort(begin(discover_index_color), end(discover_index_color), [&](std::pair<int,int> t1, std::pair<int,int> t2) { return t1.second > t2.second;});
@@ -257,7 +265,7 @@ public:
             max_color_colors.emplace_back(discover_index_color[i]);
             after_discovered += discover_index_color[i].second;
         }
-        return {unique_colors.size(), colors, after_discovered};
+        return {unique_colors.size(), colors, after_discovered, sqrt(fnd)};
     }
 
     /**
