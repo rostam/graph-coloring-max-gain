@@ -117,7 +117,7 @@ int main(int argc, const char *argv[]) {
         std::ofstream out(std::string(matrix_name) + std::string("_res.csv"));
         out << "p,ignore_nat,ignore_ago,ignore_lfo,MaxDiscovered_nat,MaxDiscovered_ago,MaxDiscovered_lfo,"
                "MaxGain_nat,MaxGain_ago,MaxGain_lfo,k,pmink,mat,rows,cols,nnz,fnm,"
-               "fnd_ignore_nat,fnd_ignore_ago,fnd_ignore_lfo,fnd_MaxDiscovered_nat,fnd_MaxDiscovered_ago"
+               "fnd_ignore_nat,fnd_ignore_ago,fnd_ignore_lfo,fnd_MaxDiscovered_nat,fnd_MaxDiscovered_ago,"
                "fnd_MaxDiscovered_lfo,fnd_MaxGain_nat,fnd_MaxGain_ago,fnd_MaxGain_lfo" << endl;
         std::string matrix_file_name = (std::string("mats/") + std::string(matrix_name) + std::string(".mtx"));
         matrix_market mm(matrix_file_name.c_str());
