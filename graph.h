@@ -197,7 +197,14 @@ public:
     // In this idea, we will first color greedily and then select between the color groups
     // those with the best discovered numbers.
     // Martin Idea: Max Discovered
-    std::tuple<int, std::vector<int>, int, double> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<int> mm, int max_color) {
+    std::tuple<int, std::vector<int>, int, double> greedy_color_max_discovered(const std::vector<int>& order, const boost::numeric::ublas::matrix<double> mm, int max_color) {
+        boost::numeric::ublas::matrix<double> m = mm;
+        for (boost::numeric::ublas::matrix<double>::iterator1 it1 = m.begin1(); it1 != m.end1(); ++it1) {
+            for (boost::numeric::ublas::matrix<double>::iterator2 it2 = it1.begin(); it2 != it1.end(); ++it2) {
+                if (*it2 != 0) *it2 = 1;
+            }
+        }
+
         init_colors();
         for (int v : order) {
             std::vector<unsigned int> forbiddenColors(num_v(), -1);
@@ -217,55 +224,53 @@ public:
             colors.push_back(the_color);
             unique_colors.insert(the_color);
         });
+        std::vector<boost::numeric::ublas::vector<double>> discovered(unique_colors.size());
+        std::vector<boost::numeric::ublas::vector<double>> discovered_with_nz(unique_colors.size());
 
-        boost::numeric::ublas::matrix<double> m = mm;
-        for (boost::numeric::ublas::matrix<double>::iterator1 it1 = m.begin1(); it1 != m.end1(); ++it1) {
-            for (boost::numeric::ublas::matrix<double>::iterator2 it2 = it1.begin(); it2 != it1.end(); ++it2) {
-                if(*it2 != 0) *it2 = 1;
-            }
-        }
-
-        std::vector<boost::numeric::ublas::vector<int>> discovered(unique_colors.size());
-        std::vector<boost::numeric::ublas::vector<int>> discovered_with_nz(unique_colors.size());
-        boost::numeric::ublas::vector<int> zeros = boost::numeric::ublas::zero_vector<int>(m.size1());
+        boost::numeric::ublas::vector<double> zeros = boost::numeric::ublas::zero_vector<double>(m.size1());
         for (int i = 0; i < unique_colors.size(); i++) {
-            discovered[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
-            discovered_with_nz[i] = boost::numeric::ublas::zero_vector<int>(m.size1());
+            discovered[i] = boost::numeric::ublas::zero_vector<double>(m.size1());
+            discovered_with_nz[i] = boost::numeric::ublas::zero_vector<double>(m.size1());
+
         }
         int cnt = 0;
         for (int i = 0; i < colors.size(); i++) {
             discovered[colors[i]] += boost::numeric::ublas::column(m, i);
             discovered_with_nz[colors[i]] += boost::numeric::ublas::column(mm, i);
         }
-        std::vector<std::pair<int,int>> discover_index_color(unique_colors.size());
+        std::vector<std::tuple<int,int,double>> discover_index_color(unique_colors.size());
         int col = 0;
-        int i=0;
-        double fnd = 0;
+        int k=0,l=0;
         for (auto &d : discovered) {
+            l = 0;
             int all_sum = 0;
-            int k=0;
+            double fnd=0;
             for (int j : d) {
-                if (j == 1) {
+               if (j == 1) {
                     all_sum += 1;
-                    fnd += pow(discovered_with_nz[i][j],2);
+                    fnd += pow(discovered_with_nz[k][l],2);
+//                    std::cerr << pow(discovered_with_nz[k][l],2) << " " << fnd << std::endl;
                 }
-                k++;
+                l++;
             }
-            discover_index_color.emplace_back(std::make_pair(col, all_sum));
+            k++;
+            discover_index_color.emplace_back(std::make_tuple(col, all_sum,fnd));
             col++;
-            i++;
         }
 
-        sort(begin(discover_index_color), end(discover_index_color), [&](std::pair<int,int> t1, std::pair<int,int> t2) { return t1.second > t2.second;});
-        std::vector<std::pair<int,int>> max_color_colors;
+        sort(begin(discover_index_color), end(discover_index_color), [&](std::tuple<int,int,double> t1, std::tuple<int,int,double> t2) { return std::get<1>(t1) > std::get<1>(t2);});
+
+        std::vector<std::tuple<int,int,double>> max_color_colors;
         int after_discovered = 0;
         int color_to = max_color;
+        double after_discovered_fnd = 0;
         if(max_color > unique_colors.size()) color_to = unique_colors.size();
         for(int i=0;i<color_to;i++) {
             max_color_colors.emplace_back(discover_index_color[i]);
-            after_discovered += discover_index_color[i].second;
+            after_discovered += std::get<1>(discover_index_color[i]);
+            after_discovered_fnd += std::get<2>(discover_index_color[i]);
         }
-        return {unique_colors.size(), colors, after_discovered, sqrt(fnd)};
+        return {unique_colors.size(), colors, after_discovered, sqrt(after_discovered_fnd)};
     }
 
     /**
